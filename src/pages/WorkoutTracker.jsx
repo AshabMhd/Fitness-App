@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { Play, Pause, RotateCcw, Plus, Minus, CheckCircle2, Mic, Clock, Zap, ChevronRight } from 'lucide-react'
+import treadmillRun from '../assets/treadmill.jpeg'
+import barbellSquat from '../assets/barbell.jpeg'
+import sunSalutation from '../assets/sun_salutaion.jpeg'
+import tabataIntervals from '../assets/tabata.jpeg'
+
+import jumpRope from '../assets/jumprope.jpeg'
+import pushupCircuit from '../assets/pushup.jpeg'
+import vinyasaFlow from '../assets/vf.jpeg'
+import burpeeBlaster from '../assets/burpee.jpeg'
 
 const categories = [
-  { id: 'all',      label: 'All',      icon: '⚡' },
+  { id: 'all',      label: 'All' },
   { id: 'cardio',   label: 'Cardio',   icon: '🏃' },
   { id: 'strength', label: 'Strength', icon: '💪' },
   { id: 'yoga',     label: 'Yoga',     icon: '🧘' },
@@ -10,14 +19,14 @@ const categories = [
 ]
 
 const workouts = [
-  { id: 1, name: 'Treadmill Run',      category: 'cardio',   duration: 30, calories: 320, difficulty: 3, icon: '🏃', desc: 'Steady-state cardio for endurance and fat burn.' },
-  { id: 2, name: 'Barbell Squat',      category: 'strength', duration: 45, calories: 280, difficulty: 4, icon: '🏋️', desc: 'Compound lower body exercise targeting quads and glutes.' },
-  { id: 3, name: 'Sun Salutation',     category: 'yoga',     duration: 20, calories: 120, difficulty: 1, icon: '🧘', desc: 'Gentle flowing sequence to energize body and mind.' },
-  { id: 4, name: 'Tabata Intervals',   category: 'hiit',     duration: 20, calories: 380, difficulty: 5, icon: '⏱️', desc: '20 sec on / 10 sec off high intensity intervals.' },
-  { id: 5, name: 'Jump Rope',          category: 'cardio',   duration: 15, calories: 220, difficulty: 2, icon: '⚡', desc: 'High-efficiency cardio improving coordination.' },
-  { id: 6, name: 'Push-up Circuit',    category: 'strength', duration: 25, calories: 200, difficulty: 3, icon: '💪', desc: 'Upper body push circuit for chest and triceps.' },
-  { id: 7, name: 'Vinyasa Flow',       category: 'yoga',     duration: 40, calories: 180, difficulty: 2, icon: '🌊', desc: 'Dynamic flowing yoga linking breath with movement.' },
-  { id: 8, name: 'Burpee Blaster',     category: 'hiit',     duration: 15, calories: 290, difficulty: 5, icon: '🔥', desc: 'Full body explosive HIIT for max calorie burn.' },
+  { id: 1, name: 'Treadmill Run', category: 'cardio', duration: 30, calories: 320, difficulty: 3, image: treadmillRun, desc: 'Steady-state cardio for endurance and fat burn.' },
+  { id: 2, name: 'Barbell Squat', category: 'strength', duration: 45, calories: 280, difficulty: 4,image:barbellSquat, desc: 'Compound lower body exercise targeting quads and glutes.' },
+  { id: 3, name: 'Sun Salutation', category: 'yoga', duration: 20, calories: 120, difficulty: 1,image:sunSalutation, desc: 'Gentle flowing sequence to energize body and mind.' },
+  { id: 4, name: 'Tabata Intervals', category: 'hiit', duration: 20, calories: 380, difficulty: 5,image:tabataIntervals, desc: '20 sec on / 10 sec off high intensity intervals.' },
+  { id: 5, name: 'Jump Rope', category: 'cardio', duration: 15, calories: 220, difficulty: 2, image: jumpRope, desc: 'High-efficiency cardio improving coordination.' },
+  { id: 6, name: 'Push-up Circuit', category: 'strength', duration: 25, calories: 200, difficulty: 3,image:pushupCircuit,  desc: 'Upper body push circuit for chest and triceps.' },
+  { id: 7, name: 'Vinyasa Flow', category: 'yoga', duration: 40, calories: 180, difficulty: 2, image:vinyasaFlow, desc: 'Dynamic flowing yoga linking breath with movement.' },
+  { id: 8, name: 'Burpee Blaster', category: 'hiit', duration: 15, calories: 290, difficulty: 5, image: burpeeBlaster, desc: 'Full body explosive HIIT for max calorie burn.' },
 ]
 
 const sessionExercises = [
@@ -180,7 +189,18 @@ export default function WorkoutTracker() {
             onClick={() => setActiveWorkout(w.id === activeWorkout ? null : w.id)}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontSize: 32 }}>{w.icon}</div>
+              <img 
+  src={w.image} 
+  alt={w.name} 
+  style={{ 
+    width: 250, 
+    height: 250, 
+    borderRadius: 12, 
+    objectFit: 'cover',
+    background: 'rgba(255,255,255,0.05)',
+    padding: 6
+  }} 
+/>
               <div style={{ display: 'flex', gap: 6, flexDirection: 'column', alignItems: 'flex-end' }}>
                 <span className="badge badge-purple" style={{ fontSize: 11 }}><Clock size={10} />{w.duration} min</span>
                 <span className="badge badge-orange" style={{ fontSize: 11 }}>🔥 {w.calories} kcal</span>

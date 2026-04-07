@@ -1,201 +1,398 @@
 import { useState, useEffect } from 'react'
-import { Flame, Target, Zap, Heart, Clock, ChevronRight, Play, Star } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ChevronRight, Play, Target, Zap, TrendingUp, Activity, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const quotes = [
-  { text: "Every rep, every step — you're building the best version of yourself.", author: "FitPulse AI" },
+  { text: "Every set, every rep — you're forging a stronger version of yourself.", author: "FitPulse" },
   { text: "The only bad workout is the one that didn't happen.", author: "Unknown" },
-  { text: "Strength doesn't come from what you can do. It comes from overcoming what you thought you couldn't.", author: "Rikki Rogers" },
-  { text: "Push yourself because no one else is going to do it for you.", author: "Unknown" },
-]
-
-const quickWorkouts = [
-  { id: 1, name: 'Morning HIIT',   duration: '20 min', intensity: 'High',   icon: '🔥', color: 'var(--grad-warm)' },
-  { id: 2, name: 'Core Strength',  duration: '15 min', intensity: 'Medium', icon: '💪', color: 'var(--grad-primary)' },
-  { id: 3, name: 'Yoga Flow',      duration: '30 min', intensity: 'Low',    icon: '🧘', color: 'var(--grad-success)' },
-  { id: 4, name: '5K Run',         duration: '25 min', intensity: 'High',   icon: '🏃', color: 'var(--grad-secondary)' },
+  { text: "Strength doesn't come from what you can do — it comes from overcoming what you thought you couldn't.", author: "Rikki Rogers" },
+  { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
 ]
 
 const activityData = [
-  { label: 'Steps',    value: 4960,  target: 8000,  unit: '',     icon: '👟', color: '#8b5cf6', percent: 62 },
-  { label: 'Calories', value: 1840,  target: 2200,  unit: 'kcal', icon: '🔥', color: '#ec4899', percent: 84 },
-  { label: 'Active',   value: 47,    target: 60,    unit: 'min',  icon: '⚡', color: '#06b6d4', percent: 78 },
-  { label: 'Heart',    value: 72,    target: 140,   unit: 'bpm',  icon: '❤️', color: '#10b981', percent: 51 },
+  { label:'Steps',    value:4960,  target:8000, unit:'',     emoji:'👟', color:'#3B82F6', pct:62 },
+  { label:'Calories', value:1840,  target:2200, unit:'kcal', emoji:'🔥', color:'#F59E0B', pct:84 },
+  { label:'Active',   value:47,    target:60,   unit:'min',  emoji:'⚡', color:'#10B981', pct:78 },
+  { label:'Heart',    value:72,    target:140,  unit:'bpm',  emoji:'❤️', color:'#8B5CF6', pct:51 },
 ]
 
-function AnimatedRing({ percent, color, size = 100, stroke = 10 }) {
-  const radius = (size - stroke) / 2
-  const circumference = 2 * Math.PI * radius
-  const [offset, setOffset] = useState(circumference)
+const quickWorkouts = [
+  { name:'Morning HIIT', duration:'20 min', intensity:'High',   emoji:'🔥', color:'#F43F5E', image:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop', category:'HIIT' },
+  { name:'Core Blast',   duration:'15 min', intensity:'Medium', emoji:'💪', color:'#3B82F6', image:'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop', category:'STRENGTH' },
+  { name:'Yoga Flow',    duration:'30 min', intensity:'Low',    emoji:'🧘', color:'#10B981', image:'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop', category:'YOGA' },
+  { name:'5K Run',       duration:'25 min', intensity:'High',   emoji:'🏃', color:'#8B5CF6', image:'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&h=300&fit=crop', category:'CARDIO' },
+]
+
+const recentActivity = [
+  { icon:'💪', title:'Barbell Squat',  sub:'4 × 8 @ 90 kg',      time:'2h ago',    color:'#3B82F6' },
+  { icon:'🏃', title:'5K Run',         sub:'24:32 — new PR! 🎉',  time:'Yesterday', color:'#F59E0B' },
+  { icon:'🧘', title:'Vinyasa Flow',   sub:'40 min completed',    time:'2 days ago', color:'#10B981' },
+]
+
+function AnimatedRing({ pct, color, size=92, stroke=8, label, value, unit }) {
+  const r = (size - stroke) / 2
+  const circ = 2 * Math.PI * r
+  const [offset, setOffset] = useState(circ)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setOffset(circumference - (percent / 100) * circumference)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [percent, circumference])
+    const t = setTimeout(() => setOffset(circ - (pct / 100) * circ), 400)
+    return () => clearTimeout(t)
+  }, [pct, circ])
 
   return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-      <circle
-        cx={size/2} cy={size/2} r={radius} fill="none"
-        stroke={color} strokeWidth={stroke}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)' }}
-      />
-    </svg>
+    <div style={{ textAlign:'center' }}>
+      <div className="ring-wrap" style={{ width:size, height:size }}>
+        <svg width={size} height={size} style={{ transform:'rotate(-90deg)', display:'block' }}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={stroke} />
+          <circle
+            cx={size/2} cy={size/2} r={r} fill="none"
+            stroke={color} strokeWidth={stroke}
+            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+            style={{ transition:'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)' }}
+          />
+        </svg>
+        <div className="ring-center">
+          <div style={{ fontFamily:'Inter, sans-serif', fontSize:14, fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>
+            {value.toLocaleString()}
+          </div>
+          {unit && <div style={{ fontSize:9, color:'var(--text-faint)', fontWeight:500, marginTop:1 }}>{unit}</div>}
+        </div>
+      </div>
+      <div style={{ fontSize:12, color:'var(--text-secondary)', marginTop:8, fontWeight:500 }}>{label}</div>
+      <div style={{ fontSize:10, color:'var(--text-faint)', marginTop:2 }}>{pct}% of goal</div>
+    </div>
   )
 }
 
 function getGreeting() {
   const h = new Date().getHours()
-  if (h < 12) return { text: 'Good Morning', emoji: '☀️', sub: "Let's start strong today!" }
-  if (h < 17) return { text: 'Good Afternoon', emoji: '🌤️', sub: "Keep the momentum going!" }
-  return { text: 'Good Evening', emoji: '🌙', sub: "Time to wind down and recover." }
+  if (h < 12) return { text:'Good Morning', emoji:'☀️', sub:"Let's crush today's training!" }
+  if (h < 17) return { text:'Good Afternoon', emoji:'🌤️', sub:"Keep the momentum going!" }
+  return { text:'Good Evening', emoji:'🌙', sub:"Recovery is part of the plan." }
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.12, ease: [0.4,0,0.2,1] } }),
 }
 
 export default function Dashboard() {
   const greeting = getGreeting()
   const quote = quotes[new Date().getDay() % quotes.length]
-  const streak = 14
 
   return (
-    <div>
-      {/* ── Header ── */}
-      <div className="page-header anim-fade-up">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 4 }}>
-              {greeting.emoji} {greeting.text}
-            </div>
-            <h1 className="page-title">
-              Hey, <span className="gradient-text">Alex!</span>
-            </h1>
-            <p className="page-subtitle">{greeting.sub}</p>
-          </div>
-          {/* Streak Badge */}
-          <div className="card card-sm" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.3)', padding: '12px 20px' }}>
-            <span style={{ fontSize: 28, animation: 'streakFlame 1.5s ease-in-out infinite', display: 'block' }}>🔥</span>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#fbbf24' }}>{streak}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Day Streak</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="page-inner">
 
-      {/* ── Today's Activity Stats ── */}
-      <div style={{ marginBottom: 28 }}>
-        <h2 className="section-heading anim-fade-up delay-1">Today's Activity</h2>
-        <div className="grid-4">
-          {activityData.map((item, i) => (
-            <div key={item.label} className={`card card-sm anim-fade-up delay-${i + 1}`} style={{ textAlign: 'center' }}>
-              <div className="stat-ring-container" style={{ marginBottom: 12 }}>
-                <AnimatedRing percent={item.percent} color={item.color} size={80} stroke={8} />
-                <div className="stat-ring-label">
-                  <div style={{ fontSize: 16 }}>{item.icon}</div>
+      {/* ── Hero greeting ── */}
+      <motion.div
+        initial={{ opacity:0, y:30 }}
+        animate={{ opacity:1, y:0 }}
+        transition={{ duration:0.8, ease:[0.4,0,0.2,1] }}
+        style={{ marginBottom:32 }}
+      >
+        <div
+          style={{
+            background: 'linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 60%, #FFFFFF 100%)',
+            borderRadius: 24,
+            padding: '40px 40px 36px',
+            border: '1px solid rgba(226,232,240,0.6)',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          }}
+        >
+          {/* bg radial glows */}
+          <div style={{ position:'absolute', top:-60, right:-40, width:260, height:260, borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)', pointerEvents:'none' }} />
+          <div style={{ position:'absolute', bottom:-40, left:-30, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', pointerEvents:'none' }} />
+
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:20, position:'relative' }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:10, fontWeight:400 }}>
+                {greeting.emoji} {greeting.text}
+              </div>
+              <h1 style={{ fontFamily:'Inter', fontSize:'clamp(30px, 4vw, 48px)', fontWeight:800, letterSpacing:'-0.03em', marginBottom:10, lineHeight:1.1, color:'var(--text-primary)' }}>
+                Train smarter,{' '}
+                <span style={{ background:'linear-gradient(135deg, #3B82F6, #6366F1)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+                  {greeting.text === 'Good Morning' ? 'start strong.' : greeting.text === 'Good Afternoon' ? 'keep going.' : 'rest well.'}
+                </span>
+              </h1>
+              <p style={{ fontSize:16, color:'var(--text-secondary)', fontWeight:400, maxWidth:520, lineHeight:1.6, marginBottom:28 }}>
+                {greeting.sub} Guided fitness sessions tailored to your goals — accessible 24/7.
+              </p>
+              <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+                <Link to="/workouts">
+                  <motion.button
+                    whileHover={{ scale:1.04 }}
+                    whileTap={{ scale:0.97 }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:8,
+                      padding:'14px 28px', borderRadius:9999,
+                      background:'#1a1a1a', color:'#FFFFFF',
+                      fontFamily:'Inter', fontSize:16, fontWeight:500,
+                      border:'none', cursor:'pointer',
+                      boxShadow:'0 4px 16px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    <Play size={16} fill="white" /> Start training
+                    <ArrowRight size={16} />
+                  </motion.button>
+                </Link>
+                <Link to="/workouts">
+                  <motion.button
+                    whileHover={{ scale:1.04 }}
+                    whileTap={{ scale:0.97 }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:8,
+                      padding:'14px 28px', borderRadius:9999,
+                      background:'transparent', color:'#1a1a1a',
+                      fontFamily:'Inter', fontSize:16, fontWeight:500,
+                      border:'1px solid #cbd5e0', cursor:'pointer',
+                    }}
+                  >
+                    Browse programs
+                  </motion.button>
+                </Link>
+              </div>
+              <p style={{ fontSize:13, color:'var(--text-faint)', marginTop:14, fontStyle:'italic' }}>
+                *No credit card required
+              </p>
+              {/* Social proof */}
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:20 }}>
+                <div style={{ display:'flex', flexDirection:'row' }}>
+                  {['https://i.pravatar.cc/150?img=1','https://i.pravatar.cc/150?img=2','https://i.pravatar.cc/150?img=3','https://i.pravatar.cc/150?img=4'].map((src, i) => (
+                    <img key={i} src={src} alt="" style={{ width:36, height:36, borderRadius:'50%', border:'2px solid white', objectFit:'cover', marginLeft: i > 0 ? -10 : 0 }} />
+                  ))}
                 </div>
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>
-                {item.value.toLocaleString()}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 2 }}>{item.unit}</span>
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.label}</div>
-              <div className="progress-bar" style={{ marginTop: 8 }}>
-                <div className="progress-fill" style={{ width: `${item.percent}%`, background: item.color }} />
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{item.percent}% of goal</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Motivational Quote ── */}
-      <div className="card card-glow anim-fade-up delay-3" style={{ marginBottom: 28, background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.08))', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -20, right: -20, fontSize: 80, opacity: 0.06 }}>"</div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--grad-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Star size={18} color="white" fill="white" />
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--purple-light)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Daily Motivation</div>
-            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.6, fontStyle: 'italic' }}>"{quote.text}"</p>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 10 }}>— {quote.author}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Quick Start Workouts ── */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h2 className="section-heading anim-fade-up" style={{ marginBottom: 0 }}>Quick Start</h2>
-          <a href="/workouts" style={{ fontSize: 13, color: 'var(--purple-light)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-            See all <ChevronRight size={16} />
-          </a>
-        </div>
-        <div className="grid-4">
-          {quickWorkouts.map((w, i) => (
-            <div key={w.id} className={`card card-sm anim-fade-up delay-${i + 2}`} style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: w.color, borderRadius: '14px 14px 0 0' }} />
-              <div style={{ fontSize: 28, marginBottom: 10, display: 'block', animation: 'float 3s ease-in-out infinite', animationDelay: `${i * 0.3}s` }}>{w.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', marginBottom: 4 }}>{w.name}</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                <span className="badge badge-purple" style={{ fontSize: 11 }}><Clock size={10} />{w.duration}</span>
-                <span className={`badge`} style={{ fontSize: 11, background: w.intensity === 'High' ? 'rgba(239,68,68,0.12)' : w.intensity === 'Low' ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)', color: w.intensity === 'High' ? '#f87171' : w.intensity === 'Low' ? '#34d399' : '#fbbf24', border: 'none' }}>
-                  {w.intensity}
+                <span style={{ fontSize:14, fontWeight:500, color:'var(--text-secondary)' }}>
+                  Join over 10,000+ people
                 </span>
               </div>
-              <button className="btn btn-primary" style={{ width: '100%', padding: '8px 12px', fontSize: 13 }}>
-                <Play size={14} fill="white" /> Start
-              </button>
+            </div>
+
+            {/* Streak card — right side */}
+            <motion.div
+              animate={{ y:[0,-6,0] }}
+              transition={{ duration:3.5, repeat:Infinity, ease:'easeInOut' }}
+              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'20px 24px', borderRadius:20, background:'rgba(255,255,255,0.9)', border:'1px solid rgba(226,232,240,0.8)', backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.08)', flexShrink:0 }}
+            >
+              <span style={{ fontSize:36, animation:'flameDance 1.5s ease-in-out infinite' }}>🔥</span>
+              <div style={{ fontFamily:'Inter', fontSize:32, fontWeight:800, color:'#F59E0B', lineHeight:1, letterSpacing:'-1px' }}>14</div>
+              <div style={{ fontSize:10, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Day Streak</div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Activity Rings ── */}
+      <motion.div
+        custom={0} variants={cardVariants} initial="hidden" animate="visible"
+        className="card" style={{ marginBottom:24 }}
+      >
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+          <div>
+            <div className="accent-line" />
+            <h2 className="section-title" style={{ marginBottom:0 }}>Today's Activity</h2>
+          </div>
+          <span className="neon-tag neon-tag-fire">● Live</span>
+        </div>
+
+        <div style={{ display:'flex', justifyContent:'space-around', flexWrap:'wrap', gap:20, marginBottom:24 }}>
+          {activityData.map(item => (
+            <AnimatedRing key={item.label} pct={item.pct} color={item.color} label={item.label} value={item.value} unit={item.unit} />
+          ))}
+        </div>
+
+        <div className="divider" />
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'12px 32px' }}>
+          {activityData.map(item => (
+            <div key={item.label}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:7 }}>
+                <span style={{ color:'var(--text-secondary)', fontWeight:500 }}>{item.emoji} {item.label}</span>
+                <span style={{ color:'var(--text-primary)', fontWeight:700 }}>
+                  {item.value.toLocaleString()}{item.unit && ` ${item.unit}`}
+                  <span style={{ color:'var(--text-faint)', fontWeight:400 }}> / {item.target.toLocaleString()}</span>
+                </span>
+              </div>
+              <div className="progress-track">
+                <div className="progress-fill" style={{ width:`${item.pct}%`, background:item.color }} />
+              </div>
             </div>
           ))}
         </div>
+      </motion.div>
+
+      {/* ── Programs carousel (PulseFit style) ── */}
+      <motion.div
+        custom={1} variants={cardVariants} initial="hidden" animate="visible"
+        style={{ marginBottom:24 }}
+      >
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <div>
+            <div className="accent-line" />
+            <h2 className="section-title" style={{ marginBottom:0 }}>Quick Start Programs</h2>
+          </div>
+          <Link to="/workouts" style={{ fontSize:14, color:'var(--text-secondary)', textDecoration:'none', fontWeight:500, display:'flex', alignItems:'center', gap:4 }}>
+            All programs <ChevronRight size={16} />
+          </Link>
+        </div>
+
+        {/* Scrolling cards row — exact PulseFit carousel */}
+        <div style={{ position:'relative', overflow:'hidden' }}>
+          {/* Left fade */}
+          <div style={{ position:'absolute', left:0, top:0, bottom:0, width:80, zIndex:10, pointerEvents:'none', background:'linear-gradient(90deg, var(--bg-page) 0%, transparent 100%)' }} />
+          {/* Right fade */}
+          <div style={{ position:'absolute', right:0, top:0, bottom:0, width:80, zIndex:10, pointerEvents:'none', background:'linear-gradient(270deg, var(--bg-page) 0%, transparent 100%)' }} />
+
+          <motion.div
+            animate={{ x:[0, -(quickWorkouts.length * 304)] }}
+            transition={{ x:{ repeat:Infinity, repeatType:'loop', duration:quickWorkouts.length * 4, ease:'linear' } }}
+            style={{ display:'flex', gap:24, paddingBottom:8 }}
+          >
+            {[...quickWorkouts, ...quickWorkouts].map((w, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale:1.05, y:-10 }}
+                transition={{ duration:0.3 }}
+                className="program-card"
+                style={{ flexShrink:0 }}
+              >
+                <img src={w.image} alt={w.name} />
+                <div className="program-card-overlay" />
+                <div className="program-card-text">
+                  <div className="program-card-category">{w.category}</div>
+                  <div className="program-card-title">{w.name}</div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* ── Quick Start + Weekly Goals ── */}
+      <div className="g2 anim-up d2" style={{ marginBottom:24 }}>
+        {/* Quick workouts */}
+        <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
+            <h2 className="section-title" style={{ marginBottom:0 }}>Quick Start</h2>
+            <Link to="/workouts" style={{ fontSize:14, color:'var(--text-secondary)', textDecoration:'none', fontWeight:500, display:'flex', alignItems:'center', gap:3 }}>
+              All workouts <ChevronRight size={15} />
+            </Link>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {quickWorkouts.map((w, i) => (
+              <Link key={w.name} to="/workouts" style={{ textDecoration:'none' }}>
+                <motion.div
+                  whileHover={{ x:4, boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}
+                  style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:16, background:'var(--bg-subtle)', border:'1px solid var(--border)', cursor:'pointer' }}
+                >
+                  <div style={{ width:42, height:42, borderRadius:12, overflow:'hidden', flexShrink:0 }}>
+                    <img src={w.image} alt={w.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{w.name}</div>
+                    <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{w.duration}</div>
+                  </div>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:9999, background:`${w.color}12`, color:w.color, border:`1px solid ${w.color}30` }}>
+                    {w.intensity}
+                  </span>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Weekly Goals */}
+        <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card">
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:18 }}>
+            <Target size={18} color="var(--blue)" />
+            <h2 className="section-title" style={{ marginBottom:0 }}>Weekly Goals</h2>
+          </div>
+          {[
+            { label:'Workouts Completed', done:4, total:5, color:'#3B82F6' },
+            { label:'Active Minutes',     done:5, total:7, color:'#10B981' },
+            { label:'Calorie Target',     done:3, total:5, color:'#8B5CF6' },
+          ].map(g => (
+            <div key={g.label} style={{ marginBottom:18 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:8 }}>
+                <span style={{ color:'var(--text-secondary)', fontWeight:500 }}>{g.label}</span>
+                <span style={{ color:'var(--text-primary)', fontWeight:700 }}>
+                  {g.done}<span style={{ color:'var(--text-faint)', fontWeight:400 }}>/{g.total}</span>
+                </span>
+              </div>
+              <div className="progress-track">
+                <motion.div
+                  className="progress-fill"
+                  initial={{ width:0 }}
+                  animate={{ width:`${(g.done/g.total)*100}%` }}
+                  transition={{ duration:1.2, delay:0.5 }}
+                  style={{ background:g.color }}
+                />
+              </div>
+            </div>
+          ))}
+          <div className="divider" />
+          <div style={{ fontSize:13, fontWeight:600, color:'var(--text-secondary)', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
+            <Zap size={14} color="var(--amber)" /> Body Metrics
+          </div>
+          {[
+            { label:'Body Weight', v:'74.2 kg', delta:'-0.8 kg', up:false },
+            { label:'Muscle Mass', v:'42.1 kg', delta:'+0.5 kg', up:true  },
+            { label:'Body Fat',    v:'18.4%',   delta:'-0.3%',   up:false },
+          ].map(m => (
+            <div key={m.label} className="metric-row">
+              <span style={{ fontSize:13, color:'var(--text-secondary)', fontWeight:500 }}>{m.label}</span>
+              <div style={{ textAlign:'right' }}>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>{m.v}</div>
+                <div style={{ fontSize:11, color: m.up ? '#10B981' : '#3B82F6', fontWeight:600 }}>{m.delta}</div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
       </div>
 
-      {/* ── Weekly Summary ── */}
-      <div className="grid-2 anim-fade-up delay-4">
-        <div className="card">
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Target size={18} color="var(--purple)" /> Weekly Goals
-          </div>
-          {[
-            { label: 'Workouts Completed', done: 4, total: 5, color: 'var(--purple)' },
-            { label: 'Calories Burned',    done: 3, total: 5, color: 'var(--pink)' },
-            { label: 'Active Minutes',     done: 5, total: 7, color: 'var(--cyan)' },
-          ].map(g => (
-            <div key={g.label} style={{ marginBottom: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
-                <span style={{ color: 'var(--text-secondary)' }}>{g.label}</span>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{g.done}/{g.total}</span>
-              </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${(g.done/g.total)*100}%`, background: g.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* ── Quote + Recent ── */}
+      <div className="g2">
+        {/* Quote */}
+        <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ background:'linear-gradient(135deg, #EEF4FF 0%, #F5F9FF 100%)', border:'1px solid rgba(59,130,246,0.15)', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:-10, right:10, fontSize:100, opacity:0.06, fontFamily:'Georgia', color:'#3B82F6', lineHeight:1 }}>"</div>
+          <div style={{ fontSize:11, color:'var(--blue)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:14 }}>Daily Fuel ⚡</div>
+          <p style={{ fontSize:16, lineHeight:1.75, fontStyle:'italic', color:'var(--text-primary)', marginBottom:14, position:'relative' }}>
+            "{quote.text}"
+          </p>
+          <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>— {quote.author}</p>
+        </motion.div>
 
-        <div className="card">
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Zap size={18} color="var(--orange)" /> Body Metrics
+        {/* Recent activity */}
+        <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card">
+          <h2 className="section-title">Recent Activity</h2>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {recentActivity.map((item, i) => (
+              <motion.div key={i} initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} transition={{ delay: 0.6 + i*0.1 }} style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{ width:44, height:44, borderRadius:14, background:`${item.color}12`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, border:`1px solid ${item.color}22` }}>
+                  {item.icon}
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{item.title}</div>
+                  <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{item.sub}</div>
+                </div>
+                <div style={{ textAlign:'right' }}>
+                  <div style={{ fontSize:11, color:'var(--text-faint)', marginBottom:5, fontWeight:500 }}>{item.time}</div>
+                  <span style={{ fontSize:10, fontWeight:600, padding:'2px 9px', borderRadius:9999, background:`${item.color}12`, color:item.color, border:`1px solid ${item.color}25` }}>✓</span>
+                </div>
+              </motion.div>
+            ))}
           </div>
-          {[
-            { label: 'Body Weight',   value: '74.2 kg',  change: '-0.8 kg',  up: false },
-            { label: 'Body Fat',      value: '18.4%',    change: '-0.3%',    up: false },
-            { label: 'Muscle Mass',   value: '42.1 kg',  change: '+0.5 kg',  up: true  },
-            { label: 'Hydration',     value: '62%',      change: '+2%',      up: true  },
-          ].map(m => (
-            <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{m.label}</span>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</div>
-                <div style={{ fontSize: 12, color: m.up ? 'var(--green)' : '#f87171', fontWeight: 600 }}>{m.change}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+          <div className="divider" />
+          <Link to="/progress">
+            <motion.button
+              whileHover={{ scale:1.02 }}
+              style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'12px 20px', borderRadius:12, background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.15)', color:'var(--blue)', fontFamily:'Inter', fontSize:14, fontWeight:600, cursor:'pointer' }}
+            >
+              <Activity size={15} /> View Full Progress <ArrowRight size={14} />
+            </motion.button>
+          </Link>
+        </motion.div>
       </div>
     </div>
   )

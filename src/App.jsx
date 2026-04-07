@@ -12,10 +12,10 @@ function App() {
         <Navbar />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/workouts" element={<WorkoutTracker />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/"          element={<Dashboard />}     />
+            <Route path="/workouts"  element={<WorkoutTracker />} />
+            <Route path="/progress"  element={<Progress />}       />
+            <Route path="/profile"   element={<Profile />}        />
           </Routes>
         </main>
       </div>

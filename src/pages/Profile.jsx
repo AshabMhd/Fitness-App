@@ -1,261 +1,223 @@
 import { useState } from 'react'
-import { Bell, Moon, Eye, Accessibility, ChevronRight, Shield, Smartphone } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Bell, Moon, Eye, Smartphone, Shield, ChevronRight, Accessibility } from 'lucide-react'
 
 const achievements = [
-  { id: 1, icon: '🏅', name: 'First Workout',   desc: 'Completed your first session',   unlocked: true  },
-  { id: 2, icon: '🔥', name: '7-Day Streak',    desc: 'Worked out 7 days in a row',      unlocked: true  },
-  { id: 3, icon: '💪', name: 'Strength Master', desc: 'Lifted 1000 kg total',            unlocked: true  },
-  { id: 4, icon: '🏃', name: 'Marathon Ready',  desc: 'Ran 42 km this month',            unlocked: false },
-  { id: 5, icon: '⚡', name: 'HIIT Champion',   desc: 'Complete 20 HIIT sessions',       unlocked: false },
-  { id: 6, icon: '🧘', name: 'Zen Master',      desc: 'Complete 15 yoga sessions',       unlocked: false },
+  { id:1, icon:'🏅', name:'First Workout',   desc:'Completed your first session',   unlocked:true  },
+  { id:2, icon:'🔥', name:'7-Day Streak',    desc:'Worked out 7 days in a row',      unlocked:true  },
+  { id:3, icon:'💪', name:'Strength Master', desc:'Lifted 1000 kg total',            unlocked:true  },
+  { id:4, icon:'🏃', name:'Marathon Ready',  desc:'Run 42 km this month',            unlocked:false },
+  { id:5, icon:'⚡', name:'HIIT Champion',   desc:'Complete 20 HIIT sessions',       unlocked:false },
+  { id:6, icon:'🧘', name:'Zen Master',      desc:'Complete 15 yoga sessions',       unlocked:false },
 ]
 
 const goals = [
-  { id: 'weight_loss',    label: 'Weight Loss',    icon: '⚖️'  },
-  { id: 'muscle_gain',   label: 'Muscle Gain',    icon: '💪'  },
-  { id: 'endurance',     label: 'Endurance',      icon: '🏃'  },
-  { id: 'flexibility',   label: 'Flexibility',    icon: '🧘'  },
-  { id: 'general',       label: 'Stay Active',    icon: '⚡'  },
+  { id:'weight_loss', label:'Weight Loss', icon:'⚖️', color:'#F43F5E' },
+  { id:'muscle_gain', label:'Muscle Gain', icon:'💪', color:'#3B82F6' },
+  { id:'endurance',   label:'Endurance',   icon:'🏃', color:'#10B981' },
+  { id:'flexibility', label:'Flexibility', icon:'🧘', color:'#8B5CF6' },
+  { id:'general',     label:'Stay Active', icon:'⚡', color:'#F59E0B' },
 ]
 
-export default function Profile() {
-  const [darkMode,      setDarkMode]      = useState(true)
-  const [notifications, setNotifications] = useState(true)
-  const [privacyMode,   setPrivacyMode]   = useState(false)
-  const [wearableSync,  setWearableSync]  = useState(false)
-  const [fontSize,      setFontSize]      = useState('md')
-  const [activeGoal,    setActiveGoal]    = useState('muscle_gain')
+const accountItems = [
+  { label:'Personal Information', icon:'👤', sub:'Name, age, height, weight' },
+  { label:'Health Data',          icon:'❤️', sub:'Connect health apps' },
+  { label:'Privacy & Security',   icon:'🔒', sub:'Data sharing preferences' },
+  { label:'Notifications',        icon:'🔔', sub:'Manage alerts' },
+  { label:'Help & Support',       icon:'💬', sub:'FAQ, contact us' },
+]
 
-  const fontSizes = ['sm', 'md', 'lg', 'xl']
+const cardVariants = {
+  hidden: { opacity:0, y:24 },
+  visible: i => ({ opacity:1, y:0, transition:{ duration:0.55, delay:i*0.1, ease:[0.4,0,0.2,1] } }),
+}
+
+export default function Profile() {
+  const [darkMode,   setDarkMode]   = useState(true)
+  const [notifs,     setNotifs]     = useState(true)
+  const [privMode,   setPrivMode]   = useState(false)
+  const [wearable,   setWearable]   = useState(false)
+  const [fontSize,   setFontSize]   = useState('md')
+  const [activeGoal, setActiveGoal] = useState('muscle_gain')
+
+  const unlocked = achievements.filter(a => a.unlocked).length
+  const activeGoalObj = goals.find(g => g.id === activeGoal)
 
   return (
-    <div>
-      <div className="page-header anim-fade-up">
-        <h1 className="page-title">My <span className="gradient-text">Profile</span></h1>
+    <div className="page-inner">
+      <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6 }} className="page-header">
+        <div className="accent-line" />
+        <h1 className="page-title">My <span className="gt-blue">Profile</span></h1>
         <p className="page-subtitle">Personalize your fitness experience</p>
-      </div>
+      </motion.div>
 
-      {/* ── User Card ── */}
-      <div className="card card-glow anim-fade-up delay-1"
-        style={{ marginBottom: 28, background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(236,72,153,0.06))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+      {/* Profile Hero */}
+      <motion.div
+        custom={0} variants={cardVariants} initial="hidden" animate="visible"
+        style={{
+          background: 'linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 60%, #FFFFFF 100%)',
+          borderRadius: 24, padding: '36px 36px 28px',
+          border: '1px solid rgba(226,232,240,0.7)',
+          marginBottom: 24, position:'relative', overflow:'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        }}
+      >
+        <div style={{ position:'absolute', top:-60, right:-50, width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', bottom:-40, left:-40, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', pointerEvents:'none' }} />
+
+        <div style={{ display:'flex', alignItems:'center', gap:24, flexWrap:'wrap', position:'relative' }}>
           {/* Avatar */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div style={{
-              width: 88, height: 88, borderRadius: '50%',
-              background: 'var(--grad-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 36, boxShadow: 'var(--shadow-glow)',
-              border: '3px solid rgba(139,92,246,0.5)',
-              animation: 'pulse-ring 2.5s infinite',
-            }}>
-              🧑‍💼
-            </div>
-            <div style={{
-              position: 'absolute', bottom: 2, right: 2,
-              width: 22, height: 22, background: 'var(--green)',
-              borderRadius: '50%', border: '2px solid var(--bg-card)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10,
-            }}>✓</div>
-          </div>
+          <motion.div
+            animate={{ boxShadow:['0 0 0 0 rgba(59,130,246,0.3)','0 0 0 12px rgba(59,130,246,0)','0 0 0 0 rgba(59,130,246,0)'] }}
+            transition={{ duration:2.5, repeat:Infinity }}
+            style={{ width:86, height:86, borderRadius:'50%', background:'linear-gradient(135deg, #3B82F6, #6366F1)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Inter', fontSize:32, fontWeight:800, color:'white', border:'3px solid rgba(59,130,246,0.25)', flexShrink:0, position:'relative' }}
+          >
+            A
+            <div style={{ position:'absolute', bottom:4, right:4, width:20, height:20, background:'#10B981', borderRadius:'50%', border:'2px solid white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, color:'white' }}>✓</div>
+          </motion.div>
 
-          <div style={{ flex: 1 }}>
-            <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 4 }}>Alex Johnson</h2>
-            <div style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>alex.johnson@fitness.com</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span className="badge badge-purple">💪 Muscle Gain</span>
-              <span className="badge badge-green">🔥 14-Day Streak</span>
-              <span className="badge badge-orange">⭐ Level 12</span>
+          <div style={{ flex:1 }}>
+            <h2 style={{ fontFamily:'Inter', fontWeight:800, fontSize:24, marginBottom:4, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>Ashab</h2>
+            <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:14 }}>ashab@fitpulse.com</div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(59,130,246,0.08)', color:'#3B82F6', border:'1px solid rgba(59,130,246,0.2)' }}>💪 Muscle Gain</span>
+              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(245,158,11,0.08)', color:'#F59E0B', border:'1px solid rgba(245,158,11,0.2)' }}>🔥 14-day Streak</span>
+              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(16,185,129,0.08)', color:'#10B981', border:'1px solid rgba(16,185,129,0.2)' }}>⭐ Level 12</span>
             </div>
           </div>
 
-          <button className="btn btn-secondary" style={{ flexShrink: 0 }}>Edit Profile</button>
+          <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }} style={{ padding:'10px 22px', borderRadius:9999, background:'white', border:'1px solid var(--border)', fontSize:14, fontWeight:600, cursor:'pointer', color:'var(--text-primary)', boxShadow:'0 2px 8px rgba(0,0,0,0.06)', flexShrink:0 }}>
+            Edit Profile
+          </motion.button>
         </div>
 
-        <div className="divider" />
-
-        {/* Stats Row */}
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          {[
-            { label: 'Workouts',  value: '147' },
-            { label: 'Following', value: '32'  },
-            { label: 'Followers', value: '89'  },
-            { label: 'XP Points', value: '4.2k' },
-          ].map(s => (
-            <div key={s.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
+        <div style={{ height:1, background:'var(--border)', margin:'28px 0 20px' }} />
+        <div style={{ display:'flex', justifyContent:'space-around' }}>
+          {[{v:'147',l:'Workouts'},{v:'32',l:'Following'},{v:'89',l:'Followers'},{v:'4.2k',l:'XP'}].map((s,i)=>(
+            <div key={s.l} style={{ textAlign:'center', padding:'0 16px', borderRight:i<3?'1px solid var(--border)':'none' }}>
+              <div style={{ fontFamily:'Inter', fontSize:24, fontWeight:800, color:'var(--text-primary)', letterSpacing:'-0.8px' }}>{s.v}</div>
+              <div style={{ fontSize:11, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginTop:3 }}>{s.l}</div>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {/* ── Fitness Goal Selector ── */}
-      <div className="card anim-fade-up delay-2" style={{ marginBottom: 24 }}>
-        <h2 className="section-heading" style={{ marginBottom: 16 }}>🎯 Fitness Goal</h2>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+      {/* Goal Selector */}
+      <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ marginBottom:24 }}>
+        <h2 className="section-title">🎯 Fitness Goal</h2>
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:16 }}>
           {goals.map(g => (
-            <button
-              key={g.id}
+            <motion.button
+              key={g.id} whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }}
               onClick={() => setActiveGoal(g.id)}
-              aria-pressed={activeGoal === g.id}
               style={{
-                padding: '10px 18px', borderRadius: 'var(--radius-full)',
-                border: `1px solid ${activeGoal === g.id ? 'rgba(139,92,246,0.5)' : 'var(--border)'}`,
-                background: activeGoal === g.id ? 'rgba(139,92,246,0.15)' : 'transparent',
-                color: activeGoal === g.id ? 'var(--purple-light)' : 'var(--text-secondary)',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                transition: 'var(--transition-bounce)', fontFamily: 'Inter, sans-serif',
-                transform: activeGoal === g.id ? 'scale(1.04)' : 'scale(1)',
-                boxShadow: activeGoal === g.id ? '0 0 20px rgba(139,92,246,0.2)' : 'none',
+                padding:'10px 20px', borderRadius:9999,
+                border:`1px solid ${activeGoal===g.id ? g.color+'50' : 'var(--border)'}`,
+                background: activeGoal===g.id ? `${g.color}10` : 'var(--bg-subtle)',
+                color: activeGoal===g.id ? g.color : 'var(--text-secondary)',
+                fontSize:14, fontWeight:600, cursor:'pointer',
+                fontFamily:'Inter',
+                boxShadow: activeGoal===g.id ? `0 4px 14px ${g.color}20` : 'none',
               }}
             >
               {g.icon} {g.label}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+        {activeGoalObj && (
+          <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} key={activeGoal} style={{ padding:'14px 18px', borderRadius:16, background:`${activeGoalObj.color}07`, border:`1px solid ${activeGoalObj.color}25`, fontSize:14, color:'var(--text-secondary)', fontWeight:400, lineHeight:1.6 }}>
+            🎯 Current focus: <span style={{ color:activeGoalObj.color, fontWeight:700 }}>{activeGoalObj.label}</span> — your workouts and recommendations are tailored to this goal.
+          </motion.div>
+        )}
+      </motion.div>
 
-      <div className="grid-2 anim-fade-up delay-3" style={{ marginBottom: 24 }}>
-        {/* ── Settings & Accessibility ── */}
-        <div className="card">
-          <h2 className="section-heading" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Accessibility size={18} color="var(--purple)" /> Accessibility & Settings
+      {/* Settings + Account */}
+      <div className="g2" style={{ marginBottom:24 }}>
+        <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card">
+          <h2 className="section-title" style={{ display:'flex', alignItems:'center', gap:8, marginBottom:22 }}>
+            <Accessibility size={18} color="var(--blue)"/> Settings
           </h2>
-
-          <div className="toggle-row">
-            <div className="toggle-label">
-              <span className="toggle-label-title"><Moon size={14} style={{ display: 'inline', marginRight: 6 }} />Dark Mode</span>
-              <span className="toggle-label-desc">Easier on eyes in low light</span>
+          {[
+            { icon:<Moon size={15}/>,      title:'Dark Mode',      desc:'Easier on eyes in low light', state:darkMode, set:setDarkMode  },
+            { icon:<Bell size={15}/>,      title:'Notifications',  desc:'Workout reminders & alerts',  state:notifs,   set:setNotifs    },
+            { icon:<Eye size={15}/>,       title:'Privacy Mode',   desc:'Hide personal metrics',       state:privMode, set:setPrivMode  },
+            { icon:<Smartphone size={15}/>,title:'Wearable Sync',  desc:'Sync with smartwatch',        state:wearable, set:setWearable  },
+          ].map(item => (
+            <div key={item.title} className="toggle-row">
+              <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                <span style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)', display:'flex', alignItems:'center', gap:7 }}>
+                  <span style={{ color:'var(--text-muted)' }}>{item.icon}</span> {item.title}
+                </span>
+                <span style={{ fontSize:12, color:'var(--text-faint)' }}>{item.desc}</span>
+              </div>
+              <label className="toggle">
+                <input type="checkbox" checked={item.state} onChange={e=>item.set(e.target.checked)}/>
+                <span className="toggle-slider"/>
+              </label>
             </div>
-            <label className="toggle" aria-label="Toggle dark mode">
-              <input type="checkbox" checked={darkMode} onChange={e => setDarkMode(e.target.checked)} />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          <div className="toggle-row">
-            <div className="toggle-label">
-              <span className="toggle-label-title"><Bell size={14} style={{ display: 'inline', marginRight: 6 }} />Notifications</span>
-              <span className="toggle-label-desc">Workout reminders & alerts</span>
-            </div>
-            <label className="toggle" aria-label="Toggle notifications">
-              <input type="checkbox" checked={notifications} onChange={e => setNotifications(e.target.checked)} />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          <div className="toggle-row">
-            <div className="toggle-label">
-              <span className="toggle-label-title"><Eye size={14} style={{ display: 'inline', marginRight: 6 }} />Privacy Mode</span>
-              <span className="toggle-label-desc">Hide personal metrics</span>
-            </div>
-            <label className="toggle" aria-label="Toggle privacy mode">
-              <input type="checkbox" checked={privacyMode} onChange={e => setPrivacyMode(e.target.checked)} />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          <div className="toggle-row">
-            <div className="toggle-label">
-              <span className="toggle-label-title"><Smartphone size={14} style={{ display: 'inline', marginRight: 6 }} />Wearable Sync</span>
-              <span className="toggle-label-desc">Sync with smartwatch</span>
-            </div>
-            <label className="toggle" aria-label="Toggle wearable sync">
-              <input type="checkbox" checked={wearableSync} onChange={e => setWearableSync(e.target.checked)} />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          {/* Font Size Accessibility Control */}
-          <div style={{ marginTop: 16, padding: '14px 0', borderTop: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 12 }}>
-              Text Size
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {fontSizes.map(size => (
-                <button
-                  key={size}
-                  onClick={() => setFontSize(size)}
-                  aria-pressed={fontSize === size}
-                  style={{
-                    flex: 1, padding: '8px 4px', borderRadius: 'var(--radius-md)',
-                    border: `1px solid ${fontSize === size ? 'rgba(139,92,246,0.5)' : 'var(--border)'}`,
-                    background: fontSize === size ? 'rgba(139,92,246,0.15)' : 'transparent',
-                    color: fontSize === size ? 'var(--purple-light)' : 'var(--text-muted)',
-                    fontSize: size === 'sm' ? 11 : size === 'md' ? 13 : size === 'lg' ? 15 : 17,
-                    fontWeight: 600, cursor: 'pointer', transition: 'var(--transition)',
-                    fontFamily: 'Inter, sans-serif',
-                  }}
-                >
-                  {size.toUpperCase()}
-                </button>
+          ))}
+          <div style={{ marginTop:18, paddingTop:18, borderTop:'1px solid var(--border)' }}>
+            <div style={{ fontSize:13, fontWeight:600, color:'var(--text-primary)', marginBottom:12 }}>Text Size</div>
+            <div style={{ display:'flex', gap:8 }}>
+              {['sm','md','lg','xl'].map(sz=>(
+                <motion.button key={sz} whileHover={{ scale:1.05 }} onClick={() => setFontSize(sz)} style={{ flex:1, padding:'9px 4px', borderRadius:12, border:`1px solid ${fontSize===sz?'var(--blue-border)':'var(--border)'}`, background: fontSize===sz?'rgba(59,130,246,0.08)':'var(--bg-subtle)', color: fontSize===sz?'var(--blue)':'var(--text-faint)', fontSize: sz==='sm'?11:sz==='md'?13:sz==='lg'?15:17, fontWeight:700, cursor:'pointer', fontFamily:'Inter' }}>
+                  {sz.toUpperCase()}
+                </motion.button>
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ── Account ── */}
-        <div className="card">
-          <h2 className="section-heading" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Shield size={18} color="var(--cyan)" /> Account
+        <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card">
+          <h2 className="section-title" style={{ display:'flex', alignItems:'center', gap:8, marginBottom:22 }}>
+            <Shield size={18} color="#10B981"/> Account
           </h2>
-          {[
-            { label: 'Personal Information', icon: '👤', sub: 'Name, age, height, weight' },
-            { label: 'Health Data',          icon: '❤️', sub: 'Connect health apps' },
-            { label: 'Privacy & Security',   icon: '🔒', sub: 'Data sharing preferences' },
-            { label: 'Notifications',        icon: '🔔', sub: 'Manage alerts' },
-            { label: 'Help & Support',       icon: '💬', sub: 'FAQ, contact us' },
-          ].map(item => (
-            <div key={item.label} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 0', borderBottom: '1px solid var(--border)',
-              cursor: 'pointer', transition: 'var(--transition)',
-            }}
-              tabIndex={0} role="button" aria-label={item.label}
+          {accountItems.map(item => (
+            <motion.div
+              key={item.label}
+              whileHover={{ x:4 }}
+              style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 0', borderBottom:'1px solid var(--border)', cursor:'pointer' }}
+              role="button" tabIndex={0}
             >
-              <div style={{ fontSize: 18 }}>{item.icon}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.sub}</div>
+              <div style={{ width:40, height:40, borderRadius:12, background:'var(--bg-subtle)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0, border:'1px solid var(--border)' }}>{item.icon}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{item.label}</div>
+                <div style={{ fontSize:12, color:'var(--text-faint)', marginTop:2 }}>{item.sub}</div>
               </div>
-              <ChevronRight size={16} color="var(--text-muted)" />
-            </div>
+              <ChevronRight size={16} color="var(--text-faint)"/>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
-      {/* ── Achievements ── */}
-      <div className="card anim-fade-up delay-5">
-        <h2 className="section-heading" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-          🏆 Achievements
-          <span className="badge badge-purple" style={{ marginLeft: 8 }}>{achievements.filter(a => a.unlocked).length}/{achievements.length}</span>
-        </h2>
-        <div className="grid-3">
+      {/* Achievements */}
+      <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card">
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
+          <h2 className="section-title" style={{ marginBottom:0 }}>🏆 Achievements</h2>
+          <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(245,158,11,0.08)', color:'var(--amber)', border:'1px solid rgba(245,158,11,0.2)' }}>{unlocked}/{achievements.length}</span>
+        </div>
+        <div className="g3">
           {achievements.map((ach, i) => (
-            <div key={ach.id}
-              className={`card card-sm anim-bounce-in delay-${i + 1}`}
-              style={{
-                textAlign: 'center',
-                background: ach.unlocked ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.02)',
-                borderColor: ach.unlocked ? 'rgba(245,158,11,0.25)' : 'var(--border)',
-                opacity: ach.unlocked ? 1 : 0.45,
-                filter: ach.unlocked ? 'none' : 'grayscale(1)',
-              }}
+            <motion.div
+              key={ach.id}
+              custom={i}
+              variants={{ hidden:{ opacity:0, scale:0.9 }, visible: i => ({ opacity:1, scale:1, transition:{ duration:0.4, delay:0.4+i*0.06, ease:[0.34,1.56,0.64,1] } }) }}
+              initial="hidden" animate="visible"
+              whileHover={ach.unlocked ? { y:-6, boxShadow:'0 12px 32px rgba(0,0,0,0.1)' } : {}}
+              className={`ach-card ${ach.unlocked?'unlocked':'locked'}`}
             >
-              <div style={{ fontSize: 32, marginBottom: 8, display: 'block', animation: ach.unlocked ? 'float 3s ease-in-out infinite' : 'none', animationDelay: `${i * 0.2}s` }}>
+              <div className="ach-icon" style={{ background:ach.unlocked?'rgba(245,158,11,0.1)':'rgba(0,0,0,0.04)', border:`1px solid ${ach.unlocked ? 'rgba(245,158,11,0.2)' : 'var(--border)'}` }}>
                 {ach.icon}
               </div>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{ach.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.4 }}>{ach.desc}</div>
+              <div style={{ fontFamily:'Inter', fontWeight:700, fontSize:13, color:'var(--text-primary)' }}>{ach.name}</div>
+              <div style={{ fontSize:11, color:'var(--text-faint)', lineHeight:1.5, textAlign:'center' }}>{ach.desc}</div>
               {ach.unlocked && (
-                <span className="badge badge-green" style={{ marginTop: 10, fontSize: 11 }}>✓ Unlocked</span>
+                <span style={{ fontSize:10, fontWeight:600, padding:'3px 10px', borderRadius:9999, background:'rgba(16,185,129,0.08)', color:'#10B981', border:'1px solid rgba(16,185,129,0.2)', marginTop:4 }}>✓ Unlocked</span>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

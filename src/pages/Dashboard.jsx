@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ChevronRight, Play, Target, Zap, TrendingUp, Activity, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { dashboard, workouts } from '../utils/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const quotes = [
   { text: "Every set, every rep — you're forging a stronger version of yourself.", author: "FitPulse" },
@@ -63,6 +64,7 @@ export default function Dashboard() {
   const [quickWorkouts, setQuickWorkouts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { darkMode } = useAuth()
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -96,6 +98,7 @@ export default function Dashboard() {
   }, [])
 
   const greeting = getGreeting()
+  const dashboardPhrase = darkMode ? 'rest well.' : 'train well.'
   const quote = quotes[new Date().getDay() % quotes.length]
 
   if (loading) {
@@ -148,10 +151,10 @@ export default function Dashboard() {
       >
         <div
           style={{
-            background: 'linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 60%, #FFFFFF 100%)',
+            background: 'var(--bg-hero)',
             borderRadius: 24,
             padding: '40px 40px 36px',
-            border: '1px solid rgba(226,232,240,0.6)',
+            border: '1px solid var(--border)',
             position: 'relative',
             overflow: 'hidden',
             boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
@@ -169,7 +172,7 @@ export default function Dashboard() {
               <h1 style={{ fontFamily:'Inter', fontSize:'clamp(30px, 4vw, 48px)', fontWeight:800, letterSpacing:'-0.03em', marginBottom:10, lineHeight:1.1, color:'var(--text-primary)' }}>
                 Train smarter,{' '}
                 <span style={{ background:'linear-gradient(135deg, #3B82F6, #6366F1)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-                  {greeting.text === 'Good Morning' ? 'start strong.' : greeting.text === 'Good Afternoon' ? 'keep going.' : 'rest well.'}
+                  {dashboardPhrase}
                 </span>
               </h1>
               <p style={{ fontSize:16, color:'var(--text-secondary)', fontWeight:400, maxWidth:520, lineHeight:1.6, marginBottom:28 }}>
@@ -193,6 +196,21 @@ export default function Dashboard() {
                     <ArrowRight size={16} />
                   </motion.button>
                 </Link>
+                <Link to="/workouts">
+                  <motion.button
+                    whileHover={{ scale:1.04 }}
+                    whileTap={{ scale:0.97 }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:8,
+                      padding:'14px 28px', borderRadius:9999,
+                      background:'transparent', color:'var(--text-primary)',
+                      fontFamily:'Inter', fontSize:16, fontWeight:500,
+                      border:'1px solid var(--border)', cursor:'pointer',
+                    }}
+                  >
+                    Browse programs
+                  </motion.button>
+                </Link>
               </div>
             </div>
 
@@ -200,7 +218,7 @@ export default function Dashboard() {
             <motion.div
               animate={{ y:[0,-6,0] }}
               transition={{ duration:3.5, repeat:Infinity, ease:'easeInOut' }}
-              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'20px 24px', borderRadius:20, background:'rgba(255,255,255,0.9)', border:'1px solid rgba(226,232,240,0.8)', backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.08)', flexShrink:0 }}
+              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'20px 24px', borderRadius:20, background:'var(--bg-panel)', border:'1px solid rgba(226,232,240,0.8)', backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.08)', flexShrink:0 }}
             >
               <span style={{ fontSize:36, animation:'flameDance 1.5s ease-in-out infinite' }}>🔥</span>
               <div style={{ fontFamily:'Inter', fontSize:32, fontWeight:800, color:'#F59E0B', lineHeight:1, letterSpacing:'-1px' }}>{dashboardData?.streak || 0}</div>
@@ -250,7 +268,7 @@ export default function Dashboard() {
 
       {/* ── Programs carousel (PulseFit style) ── */}
       <motion.div
-        custom={1} variants={cardVariants} initial="hidden" animate="visible"
+        custom={1} variants={cardVariants} initial="hidden" animate="visible" className="card"
         style={{ marginBottom:24 }}
       >
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
@@ -356,6 +374,16 @@ export default function Dashboard() {
 
       {/* ── Recent Activity ── */}
       <div className="g2">
+        {/* Quote */}
+        <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:-10, right:10, fontSize:100, opacity:0.08, fontFamily:'Georgia', color:'var(--blue)', lineHeight:1 }}>&quot;</div>
+          <div style={{ fontSize:11, color:'var(--blue)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:14 }}>Daily Fuel ⚡</div>
+          <p style={{ fontSize:16, lineHeight:1.75, fontStyle:'italic', color:'var(--text-primary)', marginBottom:14, position:'relative' }}>
+            "{quote.text}"
+          </p>
+          <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>— {quote.author}</p>
+        </motion.div>
+
         {/* Recent activity */}
         <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card">
           <h2 className="section-title">Recent Activity</h2>

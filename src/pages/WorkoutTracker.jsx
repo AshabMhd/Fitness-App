@@ -476,9 +476,9 @@ export default function WorkoutTracker() {
           ))}
         </div>
 
-        <div style={{ marginTop:24, padding:'28px', borderRadius:24, background:'rgba(248,250,252,0.95)', border:'1px solid rgba(226,232,240,0.9)' }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
-            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:14 }}>
+        <div style={{ marginTop:24, padding:'22px', borderRadius:24, background:'var(--bg-surface)', border:'1px solid var(--border)' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
               <div>
                 <h3 style={{ margin:0, fontSize:16, fontWeight:700, color:'var(--text-primary)' }}>Save this session as a plan</h3>
                 <p style={{ margin: '8px 0 0', fontSize:13, color:'var(--text-muted)', maxWidth:520 }}>Give your live session a name and save it for future reuse.</p>
@@ -488,7 +488,7 @@ export default function WorkoutTracker() {
                   value={planName}
                   onChange={e => setPlanName(e.target.value)}
                   placeholder="Plan name"
-                  style={{ width:'100%', minWidth:0, padding:'12px 16px', borderRadius:16, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)', fontSize:13 }}
+                  style={{ minWidth:180, padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)', fontSize:13 }}
                 />
                 <motion.button
                   whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
@@ -509,12 +509,12 @@ export default function WorkoutTracker() {
                     value={customWorkout.name}
                     onChange={e => setCustomWorkout(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Workout name"
-                    style={{ width:'100%', minWidth:0, padding:'12px 16px', borderRadius:16, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   />
                   <select
                     value={customWorkout.category}
                     onChange={e => setCustomWorkout(prev => ({ ...prev, category: e.target.value }))}
-                    style={{ width:'100%', minWidth:0, padding:'12px 16px', borderRadius:16, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   >
                     <option value="strength">Strength</option>
                     <option value="cardio">Cardio</option>
@@ -527,19 +527,19 @@ export default function WorkoutTracker() {
                     value={customWorkout.sets}
                     onChange={e => setCustomWorkout(prev => ({ ...prev, sets: e.target.value }))}
                     placeholder="Sets"
-                    style={{ width:'100%', minWidth:0, padding:'12px 16px', borderRadius:16, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   />
                   <input
                     value={customWorkout.reps}
                     onChange={e => setCustomWorkout(prev => ({ ...prev, reps: e.target.value }))}
                     placeholder="Reps / Time"
-                    style={{ width:'100%', minWidth:0, padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   />
                   <input
                     value={customWorkout.duration}
                     onChange={e => setCustomWorkout(prev => ({ ...prev, duration: e.target.value }))}
                     placeholder="Duration"
-                    style={{ width:'100%', minWidth:0, padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   />
                 </div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:12, width:'100%' }}>
@@ -547,7 +547,7 @@ export default function WorkoutTracker() {
                     value={customWorkout.calories}
                     onChange={e => setCustomWorkout(prev => ({ ...prev, calories: e.target.value }))}
                     placeholder="Calories"
-                    style={{ width:'100%', minWidth:0, padding:'12px 16px', borderRadius:16, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   />
                   <input
                     value={customWorkout.difficulty}
@@ -556,7 +556,7 @@ export default function WorkoutTracker() {
                     min="1"
                     max="5"
                     placeholder="Difficulty"
-                    style={{ width:'100%', minWidth:0, padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)' }}
+                    style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)' }}
                   />
                 </div>
                 <textarea
@@ -564,7 +564,7 @@ export default function WorkoutTracker() {
                   onChange={e => setCustomWorkout(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Description (optional)"
                   rows={3}
-                  style={{ width:'100%', padding:'14px 16px', borderRadius:16, border:'1px solid var(--border)', background:'white', color:'var(--text-primary)', resize:'vertical' }}
+                  style={{ padding:'10px 14px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-white)', color:'var(--text-primary)', resize:'vertical' }}
                 />
                 <motion.button
                   whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
@@ -575,7 +575,7 @@ export default function WorkoutTracker() {
                 </motion.button>
                 {customError && <div style={{ color:'#dc2626', fontSize:13 }}>{customError}</div>}
               </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'18px', borderRadius:20, background:'white', minWidth:0, width:'100%' }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'16px', borderRadius:20, background:'var(--bg-card)', minWidth:220 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>Plan Summary</div>
                 <div style={{ fontSize:12, color:'var(--text-muted)' }}>Current session has {exercises.length} exercises.</div>
                 <div style={{ fontSize:12, color:'var(--text-muted)' }}>After saving, this workout plan will be available in your saved routines.</div>
@@ -602,14 +602,14 @@ export default function WorkoutTracker() {
         )}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:14 }}>
           {plansLoading ? (
-            <div style={{ padding:'18px', borderRadius:20, background:'rgba(248,250,252,0.95)', border:'1px solid rgba(226,232,240,0.9)', gridColumn:'1/-1' }}>Loading saved plans…</div>
+            <div style={{ padding:'18px', borderRadius:20, background:'var(--bg-white)', border:'1px solid var(--border)', color:'var(--text-secondary)', gridColumn:'1/-1' }}>Loading saved plans…</div>
           ) : plansError ? (
             <div style={{ padding:'18px', borderRadius:20, background:'rgba(254,226,226,0.95)', border:'1px solid rgba(239,68,68,0.15)', color:'#b91c1c', gridColumn:'1/-1' }}>Could not load saved plans: {plansError}</div>
           ) : savedPlans.length === 0 ? (
-            <div style={{ padding:'18px', borderRadius:20, background:'rgba(248,250,252,0.95)', border:'1px solid rgba(226,232,240,0.9)', gridColumn:'1/-1' }}>No saved plans yet. Save a plan from the session panel to see it here.</div>
+            <div style={{ padding:'18px', borderRadius:20, background:'var(--bg-white)', border:'1px solid var(--border)', color:'var(--text-secondary)', gridColumn:'1/-1' }}>No saved plans yet. Save a plan from the session panel to see it here.</div>
           ) : (
             savedPlans.map(plan => (
-              <div key={plan.id} style={{ padding:'18px', borderRadius:20, background:'white', border:'1px solid rgba(226,232,240,0.9)', display:'flex', flexDirection:'column', gap:10 }}>
+              <div key={plan.id} style={{ padding:'18px', borderRadius:20, background:'var(--bg-white)', border:'1px solid var(--border)', display:'flex', flexDirection:'column', gap:10, color:'var(--text-primary)' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
                   <div>
                     <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>{plan.name}</div>

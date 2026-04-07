@@ -29,7 +29,7 @@ export default function Profile() {
   const { user: authUser } = useAuth()
   const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [darkMode, setDarkMode] = useState(true)
+  const { darkMode, setDarkMode } = useAuth()
   const [notifs, setNotifs] = useState(true)
   const [privMode, setPrivMode] = useState(false)
   const [wearable, setWearable] = useState(false)
@@ -55,6 +55,7 @@ export default function Profile() {
   }, [])
 
   const activeGoalObj = goals.find(g => g.id === activeGoal)
+  const displayName = darkMode ? ` ${userProfile?.name || 'User'}` : userProfile?.name || 'User'
 
   const achievements = [
     { id:1, icon:'🏅', name:'First Workout',   desc:'Completed your first session',   unlocked:(userProfile?.completed_workouts || 0) >= 1 },
@@ -64,7 +65,7 @@ export default function Profile() {
     { id:5, icon:'⚡', name:'HIIT Champion',   desc:'Complete 20 HIIT sessions',       unlocked:false },
     { id:6, icon:'🧘', name:'Zen Master',      desc:'Complete 15 yoga sessions',       unlocked:false },
   ]
-  const unlocked = achievements.filter(a => a.unlocked).length
+  const unlocked = achievements.filter(a => a.unlocked).length 
 
   if (loading) {
     return (
@@ -88,9 +89,9 @@ export default function Profile() {
       <motion.div
         custom={0} variants={cardVariants} initial="hidden" animate="visible"
         style={{
-          background: 'linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 60%, #FFFFFF 100%)',
+          background: 'var(--bg-hero)',
           borderRadius: 24, padding: '36px 36px 28px',
-          border: '1px solid rgba(226,232,240,0.7)',
+          border: '1px solid var(--border)',
           marginBottom: 24, position:'relative', overflow:'hidden',
           boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         }}
@@ -110,15 +111,15 @@ export default function Profile() {
           </motion.div>
 
           <div style={{ flex:1 }}>
-            <h2 style={{ fontFamily:'Inter', fontWeight:800, fontSize:24, marginBottom:4, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>{userProfile?.name || 'User'}</h2>
+            <h2 style={{ fontFamily:'Inter', fontWeight:800, fontSize:24, marginBottom:4, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>{displayName}</h2>
             <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:14 }}>{userProfile?.email || ''}</div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
               {activeGoalObj && <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:`${activeGoalObj.color}20`, color:activeGoalObj.color, border:`1px solid ${activeGoalObj.color}40` }}>{activeGoalObj.icon} {activeGoalObj.label}</span>}
-              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(245,158,11,0.08)', color:'#F59E0B', border:'1px solid rgba(245,158,11,0.2)' }}>🔥 Active Member</span>
+              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'var(--badge-warning-bg)', color:'var(--badge-warning-color)', border:'1px solid var(--badge-warning-border)' }}>🔥 Active Member</span>
             </div>
           </div>
 
-          <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }} style={{ padding:'10px 22px', borderRadius:9999, background:'white', border:'1px solid var(--border)', fontSize:14, fontWeight:600, cursor:'pointer', color:'var(--text-primary)', boxShadow:'0 2px 8px rgba(0,0,0,0.06)', flexShrink:0 }}>
+          <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }} style={{ padding:'10px 22px', borderRadius:9999, background:'var(--bg-white)', border:'1px solid var(--border)', fontSize:14, fontWeight:600, cursor:'pointer', color:'var(--text-primary)', boxShadow:'0 2px 8px rgba(0,0,0,0.06)', flexShrink:0 }}>
             Edit Profile
           </motion.button>
         </div>

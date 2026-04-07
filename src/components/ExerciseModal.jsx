@@ -59,7 +59,7 @@ export default function ExerciseModal({ workout, onClose, onAddToSession }) {
       >
         <div
           style={{
-            background: '#FFFFFF',
+            background: 'var(--bg-card)',
             borderRadius: 28,
             width: '100%',
             maxWidth: 980,
@@ -145,7 +145,7 @@ export default function ExerciseModal({ workout, onClose, onAddToSession }) {
             }}
           >
             {/* Left: Step-by-step guide */}
-            <div style={{ padding: '32px 28px 32px 36px', borderRight: '1px solid #e2e8f0', overflowY: 'auto' }}>
+            <div style={{ padding: '32px 28px 32px 36px', borderRight: '1px solid var(--border)', overflowY: 'auto' }}>
               {/* Reuse WorkoutGuide but in fullscreen context (it renders inline) */}
               <WorkoutGuide workout={workout} onClose={onClose} onAddToSession={onAddToSession} fullscreen />
             </div>
@@ -156,10 +156,10 @@ export default function ExerciseModal({ workout, onClose, onAddToSession }) {
                 <div style={{ fontSize: 11, color: workout.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
                   Muscles Targeted
                 </div>
-                <h3 style={{ fontFamily:'Inter', fontWeight:700, fontSize:18, color:'#1a1a1a', letterSpacing:'-0.02em' }}>
+                <h3 style={{ fontFamily:'Inter', fontWeight:700, fontSize:18, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>
                   Muscle Activation Map
                 </h3>
-                <p style={{ fontSize:13, color:'#718096', marginTop:4, lineHeight:1.5 }}>
+                <p style={{ fontSize:13, color:'var(--text-muted)', marginTop:4, lineHeight:1.5 }}>
                   Highlighted in <span style={{ color:workout.color, fontWeight:600 }}>blue</span> — primary groups. Faded = secondary stabilizers.
                 </p>
               </div>

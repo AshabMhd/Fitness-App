@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 import { TrendingUp, Award, Target, Zap } from 'lucide-react'
+import { user } from '../utils/api'
 
 const weeklyData = [
   { day:'Mon', steps:6200,  cal:1800, active:35 },
@@ -44,7 +45,7 @@ const heatData = Array.from({length:28},(_,i)=>({ day:i, level:[0,0,1,2,0,3,4,2,
 const Tip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background:'white', border:'1px solid var(--border)', borderRadius:14, padding:'12px 16px', boxShadow:'0 8px 24px rgba(0,0,0,0.1)' }}>
+    <div style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:14, padding:'12px 16px', boxShadow:'0 8px 24px rgba(0,0,0,0.1)' }}>
       <div style={{ fontFamily:'Inter', fontWeight:700, marginBottom:6, fontSize:13, color:'var(--text-primary)' }}>{label}</div>
       {payload.map((p,i) => <div key={i} style={{ fontSize:12, color:p.color, fontWeight:600 }}>{p.name}: {p.value?.toLocaleString()}</div>)}
     </div>
@@ -58,12 +59,26 @@ const cardVariants = {
 
 export default function Progress() {
   const [tab, setTab] = useState('steps')
+  const [profile, setProfile] = useState(null)
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profileData = await user.getProfile()
+        setProfile(profileData)
+      } catch (error) {
+        console.error('Failed to load profile for progress page:', error)
+      }
+    }
+
+    loadProfile()
+  }, [])
 
   const summary = [
     { label:'Total Workouts',  v:'47',   sub:'this month', color:'#3B82F6', icon:<Zap size={20} color="#3B82F6"/>,         delta:'+12%' },
     { label:'Calories Burned', v:'54.8k',sub:'this month', color:'#F59E0B', icon:<span style={{fontSize:20}}>🔥</span>,    delta:'+8%'  },
     { label:'Avg Active Min',  v:'52',   sub:'per day',    color:'#10B981', icon:<Target size={20} color="#10B981"/>,       delta:'+5%'  },
-    { label:'Best Streak',     v:'14',   sub:'days',       color:'#8B5CF6', icon:<span style={{fontSize:20}}>⚡</span>,     delta:'🔥'   },
+    { label:'Best Streak',     v: profile ? `${profile.streak || 0}` : '–',   sub:'days',       color:'#8B5CF6', icon:<span style={{fontSize:20}}>⚡</span>,     delta:'🔥'   },
   ]
 
   return (
@@ -241,7 +256,7 @@ export default function Progress() {
                 <div style={{ position:'absolute', inset:0, background:`linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,0.5) 100%)` }} />
               </div>
               {/* Content */}
-              <div style={{ padding:'16px 18px', background:'white' }}>
+              <div style={{ padding:'16px 18px', background:'var(--bg-card)' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ fontSize:24, flexShrink:0 }}>{pr.icon}</div>
                   <div>

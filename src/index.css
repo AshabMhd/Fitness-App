@@ -8,15 +8,31 @@
   /* ── Exact PulseFit palette ── */
   --bg-hero:   linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 50%, #FFFFFF 100%);
   --bg-page:   #F5F9FF;
+  --bg-card:   #FFFFFF;
   --bg-white:  #FFFFFF;
   --bg-subtle: #F8FBFF;
-  --bg-muted:  #EEF4FF;
+  --bg-surface: #EEF4FF;
+  --bg-panel:  rgba(255,255,255,0.96);
 
-  /* ── Text shades ── */
-  --text-primary:   #1a1a1a;
-  --text-secondary: #4a5568;
-  --text-muted:     #718096;
-  --text-faint:     #A0AEC0;
+  /* ── Shared card surface variables ── */
+  --card-bg: var(--bg-card);
+  --card-border: var(--border);
+  --card-panel: var(--bg-panel);
+  --card-surface: var(--bg-surface);
+  --card-text: var(--text-primary);
+  --card-text-secondary: var(--text-secondary);
+  --card-text-faint: var(--text-faint);
+  --badge-warning-bg: rgba(245,158,11,0.08);
+  --badge-warning-border: rgba(245,158,11,0.2);
+  --badge-warning-color: var(--amber);
+
+  /* ── Check item variables ── */
+  --check-bg: var(--bg-white);
+  --check-done-bg: rgba(16,185,129,0.04);
+  --check-done-border: rgba(16,185,129,0.2);
+
+  /* ── Card gradient ── */
+  --card-gradient: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.08));
 
   /* ── Main accent blue ── */
   --blue:        #3B82F6;
@@ -78,6 +94,78 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body.dark {
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --card-bg: #1e293b;
+  --bg-white: #1e293b;
+  --bg-subtle: #111b2f;
+  --bg-surface: #111b2f;
+  --bg-muted: #1f2937;
+  --bg-panel: rgba(30,41,59,0.9);
+  --bg-hero: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
+  --text-faint: #cbd5e1;
+  --card-text: var(--text-primary);
+  --card-text-secondary: var(--text-secondary);
+  --card-text-faint: var(--text-faint);
+  --card-border: #475569;
+  --border: #334155;
+  --border-dark: #475569;
+  --blue-soft: rgba(59,130,246,0.2);
+  --badge-warning-bg: rgba(245,158,11,0.12);
+  --badge-warning-border: rgba(245,158,11,0.22);
+  --check-bg: var(--bg-card);
+  --check-done-bg: rgba(16,185,129,0.08);
+  --check-done-border: rgba(16,185,129,0.25);
+  --card-gradient: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.12));
+}
+
+body.dark .card {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+  color: var(--card-text);
+}
+
+input, select, textarea {
+  background: var(--bg-white);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-faint);
+}
+
+body.dark .topnav {
+  background: rgba(15,23,42,0.94);
+  border-bottom-color: rgba(71,85,105,0.45);
+}
+
+body.dark .bottom-nav {
+  background: rgba(15,23,42,0.95);
+  border-top-color: rgba(71,85,105,0.45);
+}
+
+body.dark .pill-tab {
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+body.dark .pill-tab:hover {
+  color: var(--text-primary);
+  border-color: var(--border-dark);
+}
+
+body.dark .pill-tab.active {
+  background: #1f2937;
+  color: #f8fafc;
+  border-color: #475569;
 }
 
 h1,h2,h3,h4,h5 {
@@ -227,7 +315,7 @@ h1,h2,h3,h4,h5 {
 
 /* ═══ HERO GRADIENT ═══ */
 .hero-gradient {
-  background: linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 50%, #FFFFFF 100%);
+  background: var(--bg-hero);
   border-radius: var(--r-2xl);
   border: 1px solid rgba(226,232,240,0.6);
   overflow: hidden;
@@ -237,8 +325,9 @@ h1,h2,h3,h4,h5 {
 
 /* ═══ CARDS ═══ */
 .card {
-  background: #FFFFFF;
-  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--card-text);
   border-radius: var(--r-2xl);
   padding: 28px;
   position: relative; overflow: hidden;
@@ -246,6 +335,8 @@ h1,h2,h3,h4,h5 {
   box-shadow: var(--shadow-xs);
 }
 .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+.card-glow { background: var(--card-gradient) !important; }
 
 .card-sm  { padding: 20px; border-radius: var(--r-xl); }
 .card-xs  { padding: 14px; border-radius: var(--r-lg); }
@@ -341,7 +432,7 @@ h1,h2,h3,h4,h5 {
 .badge-magenta { background: rgba(139,92,246,0.08);  color: var(--violet);  border: 1px solid rgba(139,92,246,0.2);   }
 .badge-lime    { background: rgba(16,185,129,0.08);  color: var(--emerald); border: 1px solid rgba(16,185,129,0.2);   }
 .badge-success { background: rgba(16,185,129,0.08);  color: var(--emerald); border: 1px solid rgba(16,185,129,0.2);   }
-.badge-warning { background: rgba(245,158,11,0.08);  color: var(--amber);   border: 1px solid rgba(245,158,11,0.2);   }
+.badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-color); border: 1px solid var(--badge-warning-border); }
 .badge-muted   { background: rgba(0,0,0,0.04);        color: var(--text-muted); border: 1px solid var(--border);       }
 .badge-blue    { background: rgba(59,130,246,0.08);  color: var(--blue);    border: 1px solid rgba(59,130,246,0.2);   }
 
@@ -365,7 +456,7 @@ h1,h2,h3,h4,h5 {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 18px; border-radius: var(--r-full);
   font-size: 14px; font-weight: 500; cursor: pointer;
-  border: 1px solid var(--border); background: #FFFFFF;
+  border: 1px solid var(--border); background: var(--bg-white);
   color: var(--text-secondary); font-family: 'Inter', sans-serif;
   transition: var(--ease);
   box-shadow: var(--shadow-xs);
@@ -409,7 +500,7 @@ h1,h2,h3,h4,h5 {
 /* ═══ EXERCISE CARD ═══ */
 .exercise-card {
   display:flex; align-items:flex-start; gap:16px; padding:18px;
-  border-radius:var(--r-xl); background:#FFFFFF;
+  border-radius:var(--r-xl); background: var(--bg-white);
   border:1px solid var(--border); cursor:pointer; transition:var(--ease);
   box-shadow: var(--shadow-xs);
   position: relative; overflow: hidden;
@@ -429,12 +520,12 @@ h1,h2,h3,h4,h5 {
 /* ═══ CHECKLIST ═══ */
 .check-item {
   display:flex; align-items:center; gap:14px; padding:14px 18px;
-  border-radius:var(--r-xl); background:#FFFFFF;
+  border-radius:var(--r-xl); background: var(--check-bg);
   border:1px solid var(--border); cursor:pointer; transition:var(--ease);
   box-shadow: var(--shadow-xs);
 }
 .check-item:hover { border-color:var(--blue-border); background: rgba(59,130,246,0.02); }
-.check-item.done  { opacity:0.65; background:rgba(16,185,129,0.04); border-color:rgba(16,185,129,0.2); }
+.check-item.done  { opacity:0.65; background:var(--check-done-bg); border-color:var(--check-done-border); }
 .check-circle {
   width:22px; height:22px; border-radius:50%;
   border:2px solid var(--border-dark); display:flex; align-items:center; justify-content:center;
@@ -451,7 +542,7 @@ h1,h2,h3,h4,h5 {
 
 /* ═══ SESSION BAR ═══ */
 .session-bar {
-  background:white;
+  background: var(--bg-white);
   border:1px solid var(--blue-border);
   border-radius:var(--r-2xl); padding:24px 28px; margin-bottom:32px;
   box-shadow: var(--shadow-md);
@@ -467,7 +558,7 @@ h1,h2,h3,h4,h5 {
 .heat-cell:hover { transform:scale(1.3); z-index:1; }
 
 /* ═══ ACHIEVEMENT ═══ */
-.ach-card { display:flex; flex-direction:column; align-items:center; gap:10px; padding:24px 16px; border-radius:var(--r-2xl); background:#FFFFFF; border:1px solid var(--border); text-align:center; transition:var(--ease); box-shadow: var(--shadow-xs); }
+.ach-card { display:flex; flex-direction:column; align-items:center; gap:10px; padding:24px 16px; border-radius:var(--r-2xl); background: var(--bg-white); border:1px solid var(--border); text-align:center; transition:var(--ease); box-shadow: var(--shadow-xs); }
 .ach-card.unlocked { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.03); }
 .ach-card.unlocked:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
 .ach-card.locked { opacity:0.4; filter:grayscale(1); }
@@ -475,7 +566,7 @@ h1,h2,h3,h4,h5 {
 
 /* ═══ WORKOUT GUIDE PANEL ═══ */
 .guide-panel {
-  background: #FFFFFF;
+  background: var(--bg-white);
   border: 1px solid var(--blue-border);
   border-radius: var(--r-2xl);
   overflow: hidden;

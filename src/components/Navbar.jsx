@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, Dumbbell, TrendingUp, User } from 'lucide-react'
+import { LayoutDashboard, Dumbbell, TrendingUp, User, LogOut } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 const navItems = [
   { to: '/',         icon: LayoutDashboard, label: 'Dashboard' },
@@ -10,6 +11,8 @@ const navItems = [
 ]
 
 export default function Navbar() {
+  const { logout } = useAuth()
+
   return (
     <>
       <motion.header
@@ -26,7 +29,7 @@ export default function Navbar() {
             style={{ height: 40, width: 'auto', objectFit: 'contain' }}
           />
         </div>
-          
+
 
         {/* Center nav — exact PulseFit pill style, text only */}
         <nav className="topnav-nav" role="navigation" aria-label="Main navigation">
@@ -45,11 +48,15 @@ export default function Navbar() {
 
         {/* Right — CTA style button + avatar */}
         <div className="topnav-right">
-          <button className="streak-chip">
-            <span style={{ display:'inline-block', animation:'flameDance 1.6s ease-in-out infinite' }}>🔥</span>
-            Get Free Trial
+          <button
+            onClick={logout}
+            className="streak-chip"
+            style={{ background: '#ef4444', borderColor: '#ef4444' }}
+          >
+            <LogOut size={14} style={{ marginRight: '4px' }} />
+            Logout
           </button>
-          <div className="avatar-btn" title="Ashab">A</div>
+          <div className="avatar-btn" title="User">U</div>
         </div>
       </motion.header>
 

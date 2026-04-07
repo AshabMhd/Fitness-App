@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 import { TrendingUp, Award, Target, Zap } from 'lucide-react'
+import { user } from '../utils/api'
 
 const weeklyData = [
   { day:'Mon', steps:6200,  cal:1800, active:35 },
@@ -58,12 +59,26 @@ const cardVariants = {
 
 export default function Progress() {
   const [tab, setTab] = useState('steps')
+  const [profile, setProfile] = useState(null)
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profileData = await user.getProfile()
+        setProfile(profileData)
+      } catch (error) {
+        console.error('Failed to load profile for progress page:', error)
+      }
+    }
+
+    loadProfile()
+  }, [])
 
   const summary = [
     { label:'Total Workouts',  v:'47',   sub:'this month', color:'#3B82F6', icon:<Zap size={20} color="#3B82F6"/>,         delta:'+12%' },
     { label:'Calories Burned', v:'54.8k',sub:'this month', color:'#F59E0B', icon:<span style={{fontSize:20}}>🔥</span>,    delta:'+8%'  },
     { label:'Avg Active Min',  v:'52',   sub:'per day',    color:'#10B981', icon:<Target size={20} color="#10B981"/>,       delta:'+5%'  },
-    { label:'Best Streak',     v:'14',   sub:'days',       color:'#8B5CF6', icon:<span style={{fontSize:20}}>⚡</span>,     delta:'🔥'   },
+    { label:'Best Streak',     v: profile ? `${profile.streak || 0}` : '–',   sub:'days',       color:'#8B5CF6', icon:<span style={{fontSize:20}}>⚡</span>,     delta:'🔥'   },
   ]
 
   return (

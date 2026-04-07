@@ -1,15 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Bell, Moon, Eye, Smartphone, Shield, ChevronRight, Accessibility } from 'lucide-react'
-
-const achievements = [
-  { id:1, icon:'🏅', name:'First Workout',   desc:'Completed your first session',   unlocked:true  },
-  { id:2, icon:'🔥', name:'7-Day Streak',    desc:'Worked out 7 days in a row',      unlocked:true  },
-  { id:3, icon:'💪', name:'Strength Master', desc:'Lifted 1000 kg total',            unlocked:true  },
-  { id:4, icon:'🏃', name:'Marathon Ready',  desc:'Run 42 km this month',            unlocked:false },
-  { id:5, icon:'⚡', name:'HIIT Champion',   desc:'Complete 20 HIIT sessions',       unlocked:false },
-  { id:6, icon:'🧘', name:'Zen Master',      desc:'Complete 15 yoga sessions',       unlocked:false },
-]
+import { useAuth } from '../contexts/AuthContext'
+import { user } from '../utils/api'
 
 const goals = [
   { id:'weight_loss', label:'Weight Loss', icon:'⚖️', color:'#F43F5E' },
@@ -33,15 +26,55 @@ const cardVariants = {
 }
 
 export default function Profile() {
-  const [darkMode,   setDarkMode]   = useState(true)
-  const [notifs,     setNotifs]     = useState(true)
-  const [privMode,   setPrivMode]   = useState(false)
-  const [wearable,   setWearable]   = useState(false)
-  const [fontSize,   setFontSize]   = useState('md')
+  const { user: authUser } = useAuth()
+  const [userProfile, setUserProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [darkMode, setDarkMode] = useState(true)
+  const [notifs, setNotifs] = useState(true)
+  const [privMode, setPrivMode] = useState(false)
+  const [wearable, setWearable] = useState(false)
+  const [fontSize, setFontSize] = useState('md')
   const [activeGoal, setActiveGoal] = useState('muscle_gain')
 
-  const unlocked = achievements.filter(a => a.unlocked).length
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await user.getProfile()
+        setUserProfile(profile)
+        if (profile.goal) {
+          setActiveGoal(profile.goal)
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [])
+
   const activeGoalObj = goals.find(g => g.id === activeGoal)
+
+  const achievements = [
+    { id:1, icon:'🏅', name:'First Workout',   desc:'Completed your first session',   unlocked:(userProfile?.completed_workouts || 0) >= 1 },
+    { id:2, icon:'🔥', name:'7-Day Streak',    desc:'Worked out 7 days in a row',      unlocked:(userProfile?.streak || 0) >= 7 },
+    { id:3, icon:'💪', name:'Strength Master', desc:'Earn 1,000 XP',                   unlocked:(userProfile?.total_xp || 0) >= 1000 },
+    { id:4, icon:'🏃', name:'Marathon Ready',  desc:'Run 42 km this month',            unlocked:false },
+    { id:5, icon:'⚡', name:'HIIT Champion',   desc:'Complete 20 HIIT sessions',       unlocked:false },
+    { id:6, icon:'🧘', name:'Zen Master',      desc:'Complete 15 yoga sessions',       unlocked:false },
+  ]
+  const unlocked = achievements.filter(a => a.unlocked).length
+
+  if (loading) {
+    return (
+      <div className="page-inner">
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          Loading profile...
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="page-inner">
@@ -77,12 +110,11 @@ export default function Profile() {
           </motion.div>
 
           <div style={{ flex:1 }}>
-            <h2 style={{ fontFamily:'Inter', fontWeight:800, fontSize:24, marginBottom:4, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>Ashab</h2>
-            <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:14 }}>ashab@fitpulse.com</div>
+            <h2 style={{ fontFamily:'Inter', fontWeight:800, fontSize:24, marginBottom:4, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>{userProfile?.name || 'User'}</h2>
+            <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:14 }}>{userProfile?.email || ''}</div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(59,130,246,0.08)', color:'#3B82F6', border:'1px solid rgba(59,130,246,0.2)' }}>💪 Muscle Gain</span>
-              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(245,158,11,0.08)', color:'#F59E0B', border:'1px solid rgba(245,158,11,0.2)' }}>🔥 14-day Streak</span>
-              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(16,185,129,0.08)', color:'#10B981', border:'1px solid rgba(16,185,129,0.2)' }}>⭐ Level 12</span>
+              {activeGoalObj && <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:`${activeGoalObj.color}20`, color:activeGoalObj.color, border:`1px solid ${activeGoalObj.color}40` }}>{activeGoalObj.icon} {activeGoalObj.label}</span>}
+              <span style={{ fontSize:12, fontWeight:600, padding:'4px 12px', borderRadius:9999, background:'rgba(245,158,11,0.08)', color:'#F59E0B', border:'1px solid rgba(245,158,11,0.2)' }}>🔥 Active Member</span>
             </div>
           </div>
 
@@ -93,7 +125,12 @@ export default function Profile() {
 
         <div style={{ height:1, background:'var(--border)', margin:'28px 0 20px' }} />
         <div style={{ display:'flex', justifyContent:'space-around' }}>
-          {[{v:'147',l:'Workouts'},{v:'32',l:'Following'},{v:'89',l:'Followers'},{v:'4.2k',l:'XP'}].map((s,i)=>(
+          {[
+            { v: userProfile?.completed_workouts || 0,   l:'Workouts' },
+            { v: `${userProfile?.streak || 0}d`,         l:'Current Streak' },
+            { v: `${userProfile?.total_xp || 0} XP`,      l:'XP Earned' },
+            { v: `${userProfile?.hours_logged || 0}h`,    l:'Hours Logged' },
+          ].map((s,i)=>(
             <div key={s.l} style={{ textAlign:'center', padding:'0 16px', borderRight:i<3?'1px solid var(--border)':'none' }}>
               <div style={{ fontFamily:'Inter', fontSize:24, fontWeight:800, color:'var(--text-primary)', letterSpacing:'-0.8px' }}>{s.v}</div>
               <div style={{ fontSize:11, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginTop:3 }}>{s.l}</div>

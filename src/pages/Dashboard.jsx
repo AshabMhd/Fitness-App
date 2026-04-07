@@ -2,32 +2,13 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight, Play, Target, Zap, TrendingUp, Activity, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { dashboard, workouts } from '../utils/api'
 
 const quotes = [
   { text: "Every set, every rep — you're forging a stronger version of yourself.", author: "FitPulse" },
   { text: "The only bad workout is the one that didn't happen.", author: "Unknown" },
   { text: "Strength doesn't come from what you can do — it comes from overcoming what you thought you couldn't.", author: "Rikki Rogers" },
   { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
-]
-
-const activityData = [
-  { label:'Steps',    value:4960,  target:8000, unit:'',     emoji:'👟', color:'#3B82F6', pct:62 },
-  { label:'Calories', value:1840,  target:2200, unit:'kcal', emoji:'🔥', color:'#F59E0B', pct:84 },
-  { label:'Active',   value:47,    target:60,   unit:'min',  emoji:'⚡', color:'#10B981', pct:78 },
-  { label:'Heart',    value:72,    target:140,  unit:'bpm',  emoji:'❤️', color:'#8B5CF6', pct:51 },
-]
-
-const quickWorkouts = [
-  { name:'Morning HIIT', duration:'20 min', intensity:'High',   emoji:'🔥', color:'#F43F5E', image:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop', category:'HIIT' },
-  { name:'Core Blast',   duration:'15 min', intensity:'Medium', emoji:'💪', color:'#3B82F6', image:'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop', category:'STRENGTH' },
-  { name:'Yoga Flow',    duration:'30 min', intensity:'Low',    emoji:'🧘', color:'#10B981', image:'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop', category:'YOGA' },
-  { name:'5K Run',       duration:'25 min', intensity:'High',   emoji:'🏃', color:'#8B5CF6', image:'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&h=300&fit=crop', category:'CARDIO' },
-]
-
-const recentActivity = [
-  { icon:'💪', title:'Barbell Squat',  sub:'4 × 8 @ 90 kg',      time:'2h ago',    color:'#3B82F6' },
-  { icon:'🏃', title:'5K Run',         sub:'24:32 — new PR! 🎉',  time:'Yesterday', color:'#F59E0B' },
-  { icon:'🧘', title:'Vinyasa Flow',   sub:'40 min completed',    time:'2 days ago', color:'#10B981' },
 ]
 
 function AnimatedRing({ pct, color, size=92, stroke=8, label, value, unit }) {
@@ -78,8 +59,82 @@ const cardVariants = {
 }
 
 export default function Dashboard() {
+  const [dashboardData, setDashboardData] = useState(null)
+  const [quickWorkouts, setQuickWorkouts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const [dashboardResult, workoutsResult] = await Promise.all([
+          dashboard.getData(),
+          workouts.getAll()
+        ])
+
+        setDashboardData(dashboardResult)
+        // Get 4 random workouts for quick access
+        const shuffled = workoutsResult.sort(() => 0.5 - Math.random())
+        const transformedWorkouts = shuffled.slice(0, 4).map(w => ({
+          name: w.name,
+          duration: `${w.duration} min`,
+          intensity: w.difficulty <= 2 ? 'Low' : w.difficulty <= 3 ? 'Medium' : 'High',
+          emoji: w.category === 'cardio' ? '🏃' : w.category === 'strength' ? '💪' : w.category === 'yoga' ? '🧘' : '⚡',
+          color: w.category === 'cardio' ? '#F43F5E' : w.category === 'strength' ? '#3B82F6' : w.category === 'yoga' ? '#10B981' : '#F59E0B',
+          image: w.image_url,
+          category: w.category.toUpperCase()
+        }))
+        setQuickWorkouts(transformedWorkouts)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadDashboard()
+  }, [])
+
   const greeting = getGreeting()
   const quote = quotes[new Date().getDay() % quotes.length]
+
+  if (loading) {
+    return (
+      <div className="page-inner">
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          Loading dashboard...
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="page-inner">
+        <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
+          Error loading dashboard: {error}
+        </div>
+      </div>
+    )
+  }
+
+  const todayProgress = dashboardData?.todayProgress || { steps: 0, calories_burned: 0, active_minutes: 0, heart_rate_avg: 0 }
+  const recentSessions = dashboardData?.recentSessions || []
+
+  const activityData = [
+    { label:'Steps', value:todayProgress.steps, target:8000, unit:'', emoji:'👟', color:'#3B82F6', pct:Math.min(100, Math.round((todayProgress.steps / 8000) * 100)) },
+    { label:'Calories', value:todayProgress.calories_burned, target:2200, unit:'kcal', emoji:'🔥', color:'#F59E0B', pct:Math.min(100, Math.round((todayProgress.calories_burned / 2200) * 100)) },
+    { label:'Active', value:todayProgress.active_minutes, target:60, unit:'min', emoji:'⚡', color:'#10B981', pct:Math.min(100, Math.round((todayProgress.active_minutes / 60) * 100)) },
+    { label:'Heart', value:todayProgress.heart_rate_avg || 72, target:140, unit:'bpm', emoji:'❤️', color:'#8B5CF6', pct:Math.min(100, Math.round(((todayProgress.heart_rate_avg || 72) / 140) * 100)) },
+  ]
+
+  const recentActivity = recentSessions.map(session => ({
+    icon: session.category === 'cardio' ? '🏃' : session.category === 'strength' ? '💪' : session.category === 'yoga' ? '🧘' : '⚡',
+    title: session.name,
+    sub: `${session.duration} min completed`,
+    time: new Date(session.end_time).toLocaleDateString(),
+    color: session.category === 'cardio' ? '#F43F5E' : session.category === 'strength' ? '#3B82F6' : session.category === 'yoga' ? '#10B981' : '#F59E0B'
+  }))
 
   return (
     <div className="page-inner">
@@ -154,20 +209,6 @@ export default function Dashboard() {
                   </motion.button>
                 </Link>
               </div>
-              <p style={{ fontSize:13, color:'var(--text-faint)', marginTop:14, fontStyle:'italic' }}>
-                *No credit card required
-              </p>
-              {/* Social proof */}
-              <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:20 }}>
-                <div style={{ display:'flex', flexDirection:'row' }}>
-                  {['https://i.pravatar.cc/150?img=1','https://i.pravatar.cc/150?img=2','https://i.pravatar.cc/150?img=3','https://i.pravatar.cc/150?img=4'].map((src, i) => (
-                    <img key={i} src={src} alt="" style={{ width:36, height:36, borderRadius:'50%', border:'2px solid white', objectFit:'cover', marginLeft: i > 0 ? -10 : 0 }} />
-                  ))}
-                </div>
-                <span style={{ fontSize:14, fontWeight:500, color:'var(--text-secondary)' }}>
-                  Join over 10,000+ people
-                </span>
-              </div>
             </div>
 
             {/* Streak card — right side */}
@@ -177,7 +218,7 @@ export default function Dashboard() {
               style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'20px 24px', borderRadius:20, background:'rgba(255,255,255,0.9)', border:'1px solid rgba(226,232,240,0.8)', backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.08)', flexShrink:0 }}
             >
               <span style={{ fontSize:36, animation:'flameDance 1.5s ease-in-out infinite' }}>🔥</span>
-              <div style={{ fontFamily:'Inter', fontSize:32, fontWeight:800, color:'#F59E0B', lineHeight:1, letterSpacing:'-1px' }}>14</div>
+              <div style={{ fontFamily:'Inter', fontSize:32, fontWeight:800, color:'#F59E0B', lineHeight:1, letterSpacing:'-1px' }}>{dashboardData?.streak || 0}</div>
               <div style={{ fontSize:10, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Day Streak</div>
             </motion.div>
           </div>

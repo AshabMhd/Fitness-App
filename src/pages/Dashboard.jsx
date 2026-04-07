@@ -193,21 +193,6 @@ export default function Dashboard() {
                     <ArrowRight size={16} />
                   </motion.button>
                 </Link>
-                <Link to="/workouts">
-                  <motion.button
-                    whileHover={{ scale:1.04 }}
-                    whileTap={{ scale:0.97 }}
-                    style={{
-                      display:'flex', alignItems:'center', gap:8,
-                      padding:'14px 28px', borderRadius:9999,
-                      background:'transparent', color:'#1a1a1a',
-                      fontFamily:'Inter', fontSize:16, fontWeight:500,
-                      border:'1px solid #cbd5e0', cursor:'pointer',
-                    }}
-                  >
-                    Browse programs
-                  </motion.button>
-                </Link>
               </div>
             </div>
 
@@ -291,60 +276,28 @@ export default function Dashboard() {
             style={{ display:'flex', gap:24, paddingBottom:8 }}
           >
             {[...quickWorkouts, ...quickWorkouts].map((w, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale:1.05, y:-10 }}
-                transition={{ duration:0.3 }}
-                className="program-card"
-                style={{ flexShrink:0 }}
-              >
-                <img src={w.image} alt={w.name} />
-                <div className="program-card-overlay" />
-                <div className="program-card-text">
-                  <div className="program-card-category">{w.category}</div>
-                  <div className="program-card-title">{w.name}</div>
-                </div>
-              </motion.div>
+              <Link key={i} to="/workouts" style={{ textDecoration:'none' }}>
+                <motion.div
+                  whileHover={{ scale:1.05, y:-10 }}
+                  transition={{ duration:0.3 }}
+                  className="program-card"
+                  style={{ flexShrink:0, cursor:'pointer' }}
+                >
+                  <img src={w.image} alt={w.name} />
+                  <div className="program-card-overlay" />
+                  <div className="program-card-text">
+                    <div className="program-card-category">{w.category}</div>
+                    <div className="program-card-title">{w.name}</div>
+                  </div>
+                </motion.div>
+              </Link>
             ))}
           </motion.div>
         </div>
       </motion.div>
 
-      {/* ── Quick Start + Weekly Goals ── */}
-      <div className="g2 anim-up d2" style={{ marginBottom:24 }}>
-        {/* Quick workouts */}
-        <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card">
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
-            <h2 className="section-title" style={{ marginBottom:0 }}>Quick Start</h2>
-            <Link to="/workouts" style={{ fontSize:14, color:'var(--text-secondary)', textDecoration:'none', fontWeight:500, display:'flex', alignItems:'center', gap:3 }}>
-              All workouts <ChevronRight size={15} />
-            </Link>
-          </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {quickWorkouts.map((w, i) => (
-              <Link key={w.name} to="/workouts" style={{ textDecoration:'none' }}>
-                <motion.div
-                  whileHover={{ x:4, boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}
-                  style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:16, background:'var(--bg-subtle)', border:'1px solid var(--border)', cursor:'pointer' }}
-                >
-                  <div style={{ width:42, height:42, borderRadius:12, overflow:'hidden', flexShrink:0 }}>
-                    <img src={w.image} alt={w.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                  </div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{w.name}</div>
-                    <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{w.duration}</div>
-                  </div>
-                  <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:9999, background:`${w.color}12`, color:w.color, border:`1px solid ${w.color}30` }}>
-                    {w.intensity}
-                  </span>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Weekly Goals */}
-        <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card">
+      {/* ── Weekly Goals ── */}
+      <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ marginBottom:24 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:18 }}>
             <Target size={18} color="var(--blue)" />
             <h2 className="section-title" style={{ marginBottom:0 }}>Weekly Goals</h2>
@@ -390,38 +343,39 @@ export default function Dashboard() {
             </div>
           ))}
         </motion.div>
-      </div>
 
-      {/* ── Quote + Recent ── */}
+      {/* ── Daily Fuel ── */}
+      <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ background:'linear-gradient(135deg, #EEF4FF 0%, #F5F9FF 100%)', border:'1px solid rgba(59,130,246,0.15)', position:'relative', overflow:'hidden', marginBottom:24 }}>
+        <div style={{ position:'absolute', top:-10, right:10, fontSize:100, opacity:0.06, fontFamily:'Georgia', color:'#3B82F6', lineHeight:1 }}>\"</div>
+        <div style={{ fontSize:11, color:'var(--blue)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:14 }}>Daily Fuel ⚡</div>
+        <p style={{ fontSize:16, lineHeight:1.75, fontStyle:'italic', color:'var(--text-primary)', marginBottom:14, position:'relative' }}>
+          "{quote.text}"
+        </p>
+        <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>— {quote.author}</p>
+      </motion.div>
+
+      {/* ── Recent Activity ── */}
       <div className="g2">
-        {/* Quote */}
-        <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ background:'linear-gradient(135deg, #EEF4FF 0%, #F5F9FF 100%)', border:'1px solid rgba(59,130,246,0.15)', position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:-10, right:10, fontSize:100, opacity:0.06, fontFamily:'Georgia', color:'#3B82F6', lineHeight:1 }}>"</div>
-          <div style={{ fontSize:11, color:'var(--blue)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:14 }}>Daily Fuel ⚡</div>
-          <p style={{ fontSize:16, lineHeight:1.75, fontStyle:'italic', color:'var(--text-primary)', marginBottom:14, position:'relative' }}>
-            "{quote.text}"
-          </p>
-          <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>— {quote.author}</p>
-        </motion.div>
-
         {/* Recent activity */}
-        <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card">
+        <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card">
           <h2 className="section-title">Recent Activity</h2>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {recentActivity.map((item, i) => (
-              <motion.div key={i} initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} transition={{ delay: 0.6 + i*0.1 }} style={{ display:'flex', alignItems:'center', gap:14 }}>
-                <div style={{ width:44, height:44, borderRadius:14, background:`${item.color}12`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, border:`1px solid ${item.color}22` }}>
-                  {item.icon}
-                </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{item.title}</div>
-                  <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{item.sub}</div>
-                </div>
-                <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:11, color:'var(--text-faint)', marginBottom:5, fontWeight:500 }}>{item.time}</div>
-                  <span style={{ fontSize:10, fontWeight:600, padding:'2px 9px', borderRadius:9999, background:`${item.color}12`, color:item.color, border:`1px solid ${item.color}25` }}>✓</span>
-                </div>
-              </motion.div>
+              <Link key={i} to="/workouts" style={{ textDecoration:'none' }}>
+                <motion.div initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} transition={{ delay: 0.6 + i*0.1 }} whileHover={{ x:4, boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }} style={{ display:'flex', alignItems:'center', gap:14, padding:'8px 0', cursor:'pointer', borderRadius:8 }}>
+                  <div style={{ width:44, height:44, borderRadius:14, background:`${item.color}12`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, border:`1px solid ${item.color}22` }}>
+                    {item.icon}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{item.title}</div>
+                    <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{item.sub}</div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:11, color:'var(--text-faint)', marginBottom:5, fontWeight:500 }}>{item.time}</div>
+                    <span style={{ fontSize:10, fontWeight:600, padding:'2px 9px', borderRadius:9999, background:`${item.color}12`, color:item.color, border:`1px solid ${item.color}25` }}>•</span>
+                  </div>
+                </motion.div>
+              </Link>
             ))}
           </div>
           <div className="divider" />

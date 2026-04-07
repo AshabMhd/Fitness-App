@@ -304,6 +304,31 @@ app.get('/api/plans', authenticateToken, (req, res) => {
   res.json(plans.map(plan => ({ ...plan, exercises: JSON.parse(plan.exercises) })))
 })
 
+app.delete('/api/plans/:id', authenticateToken, (req, res) => {
+  const plan = db.prepare('SELECT * FROM workout_plans WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id)
+  if (!plan) {
+    return res.status(404).json({ error: 'Plan not found' })
+  }
+
+  db.prepare('DELETE FROM workout_plans WHERE id = ?').run(req.params.id)
+  res.json({ success: true })
+})
+
+app.delete('/api/plans', authenticateToken, (req, res) => {
+  const { planId } = req.body
+  if (!planId) {
+    return res.status(400).json({ error: 'Plan ID is required' })
+  }
+
+  const plan = db.prepare('SELECT * FROM workout_plans WHERE id = ? AND user_id = ?').get(planId, req.user.id)
+  if (!plan) {
+    return res.status(404).json({ error: 'Plan not found' })
+  }
+
+  db.prepare('DELETE FROM workout_plans WHERE id = ?').run(planId)
+  res.json({ success: true })
+})
+
 // Session routes
 app.post('/api/sessions', authenticateToken, (req, res) => {
   const { workoutId, startTime, endTime, duration = 0, caloriesBurned = 0, completed = false } = req.body

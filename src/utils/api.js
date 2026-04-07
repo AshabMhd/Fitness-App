@@ -20,13 +20,23 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, config)
+  const text = await response.text()
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Network error' }))
-    throw new ApiError(error.error || 'Request failed', response.status)
+  let data = null
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = null
+    }
   }
 
-  return response.json()
+  if (!response.ok) {
+    const message = data?.error || response.statusText || 'Request failed'
+    throw new ApiError(message, response.status)
+  }
+
+  return data
 }
 
 export const auth = {
@@ -60,6 +70,24 @@ export const workouts = {
     method: 'POST',
     body: JSON.stringify(planData),
   }),
+  getPlans: () => apiRequest('/plans'),
+  deletePlan: async (planId) => {
+    if (!planId) throw new Error('Plan ID is required')
+
+    try {
+      return await apiRequest(`/plans/${planId}`, {
+        method: 'DELETE',
+      })
+    } catch (err) {
+      if (err.status === 404) {
+        return await apiRequest('/plans', {
+          method: 'DELETE',
+          body: JSON.stringify({ planId }),
+        })
+      }
+      throw err
+    }
+  },
 }
 
 export const sessions = {

@@ -21,6 +21,7 @@ const db = new Database(dbPath)
 app.use(cors())
 app.use(express.json())
 
+
 // Initialize database tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -477,6 +478,6 @@ app.get('/api/dashboard', authenticateToken, (req, res) => {
   })
 })
 
-app.listen(5000, '0.0.0.0', () => {
-  console.log("Server running on port 5000");
-});
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})

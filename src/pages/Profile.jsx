@@ -33,7 +33,7 @@ export default function Profile() {
   const [notifs, setNotifs] = useState(true)
   const [privMode, setPrivMode] = useState(false)
   const [wearable, setWearable] = useState(false)
-  const [fontSize, setFontSize] = useState('md')
+  const { fontSize, setFontSize } = useAuth()
   const [activeGoal, setActiveGoal] = useState('muscle_gain')
 
   useEffect(() => {

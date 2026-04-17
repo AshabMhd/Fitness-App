@@ -20,11 +20,22 @@ export const AuthProvider = ({ children }) => {
     if (saved) return saved === 'dark'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
+  const [fontSize, setFontSize] = useState(() => {
+    if (typeof window === 'undefined') return 'md'
+    const saved = window.localStorage.getItem('fitpulse-font-size')
+    return saved || 'md'
+  })
 
   useEffect(() => {
     document.body.classList.toggle('dark', darkMode)
     window.localStorage.setItem('fitpulse-theme', darkMode ? 'dark' : 'light')
   }, [darkMode])
+
+  useEffect(() => {
+    const sizes = { sm: 14, md: 16, lg: 18, xl: 20 }
+    document.documentElement.style.fontSize = sizes[fontSize] + 'px'
+    window.localStorage.setItem('fitpulse-font-size', fontSize)
+  }, [fontSize])
 
   useEffect(() => {
     // Check if user is logged in on app start
@@ -71,7 +82,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     darkMode,
-    setDarkMode
+    setDarkMode,
+    fontSize,
+    setFontSize
   }
 
   return (

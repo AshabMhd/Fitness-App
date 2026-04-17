@@ -6,10 +6,33 @@ import Dashboard from './pages/Dashboard'
 import WorkoutTracker from './pages/WorkoutTracker'
 import Progress from './pages/Progress'
 import Profile from './pages/Profile'
+import { useEffect } from "react";
+import {
+  initNotifications,
+  scheduleWorkoutReminder,
+  scheduleMoveReminder,
+  scheduleWaterReminder,
+  scheduleStreakReminder
+} from "./utils/notifications";
 
 function AppContent() {
   const { user, loading } = useAuth()
 
+  useEffect(() => {
+    if (!user) return;
+
+    async function setupNotifications() {
+      await initNotifications();
+
+      await scheduleWorkoutReminder();
+      await scheduleMoveReminder();
+      await scheduleWaterReminder();
+      await scheduleStreakReminder();
+    }
+
+    setupNotifications();
+  }, [user]);
+  
   if (loading) {
     return (
       <div style={{

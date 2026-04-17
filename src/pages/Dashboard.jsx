@@ -196,21 +196,6 @@ export default function Dashboard() {
                     <ArrowRight size={16} />
                   </motion.button>
                 </Link>
-                <Link to="/workouts">
-                  <motion.button
-                    whileHover={{ scale:1.04 }}
-                    whileTap={{ scale:0.97 }}
-                    style={{
-                      display:'flex', alignItems:'center', gap:8,
-                      padding:'14px 28px', borderRadius:9999,
-                      background:'transparent', color:'var(--text-primary)',
-                      fontFamily:'Inter', fontSize:16, fontWeight:500,
-                      border:'1px solid var(--border)', cursor:'pointer',
-                    }}
-                  >
-                    Browse programs
-                  </motion.button>
-                </Link>
               </div>
             </div>
 

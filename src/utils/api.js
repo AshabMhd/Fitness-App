@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3001/api'
+const API_BASE = 'http://10.255.22.153:5000/api'
 
 class ApiError extends Error {
   constructor(message, status) {

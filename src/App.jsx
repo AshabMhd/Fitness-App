@@ -7,13 +7,7 @@ import WorkoutTracker from './pages/WorkoutTracker'
 import Progress from './pages/Progress'
 import Profile from './pages/Profile'
 import { useEffect } from "react";
-import {
-  initNotifications,
-  scheduleWorkoutReminder,
-  scheduleMoveReminder,
-  scheduleWaterReminder,
-  scheduleStreakReminder
-} from "./utils/notifications";
+import { applyReminderSchedule } from "./utils/notifications";
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -22,12 +16,7 @@ function AppContent() {
     if (!user) return;
 
     async function setupNotifications() {
-      await initNotifications();
-
-      await scheduleWorkoutReminder();
-      await scheduleMoveReminder();
-      await scheduleWaterReminder();
-      await scheduleStreakReminder();
+      await applyReminderSchedule();
     }
 
     setupNotifications();

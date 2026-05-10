@@ -92,6 +92,19 @@ db.exec(`
     unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS personal_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    exercise_name TEXT NOT NULL,
+    value REAL NOT NULL,
+    unit TEXT NOT NULL,
+    achieved_date DATE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, exercise_name)
+  );
 `)
 
 // Seed initial workout data
@@ -147,10 +160,17 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
-  if (!token) return res.status(401).json({ error: 'Access token required' })
+  if (!token) {
+    console.log('No auth token provided')
+    return res.status(401).json({ error: 'Access token required' })
+  }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid token' })
+    if (err) {
+      console.log('Invalid token:', err.message)
+      return res.status(403).json({ error: 'Invalid token' })
+    }
+    console.log('Authenticated user:', user.id)
     req.user = user
     next()
   })
@@ -332,15 +352,22 @@ app.delete('/api/plans', authenticateToken, (req, res) => {
 
 // Session routes
 app.post('/api/sessions', authenticateToken, (req, res) => {
+  console.log('Session creation called for user:', req.user.id)
   const { workoutId, startTime, endTime, duration = 0, caloriesBurned = 0, completed = false } = req.body
+  console.log('Session data:', { workoutId, startTime, endTime, duration, caloriesBurned, completed })
 
   const result = db.prepare(`
     INSERT INTO workout_sessions (user_id, workout_id, start_time, end_time, duration, calories_burned, completed)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(req.user.id, workoutId || null, startTime, endTime, duration, caloriesBurned, completed ? 1 : 0)
 
+  console.log('Session created with ID:', result.lastInsertRowid)
+
   const today = new Date().toISOString().split('T')[0]
+  console.log('Today date:', today)
+
   const userRow = db.prepare('SELECT streak, last_workout_date FROM users WHERE id = ?').get(req.user.id)
+  console.log('Current user streak data:', userRow)
 
   let newStreak = 1
   if (userRow?.last_workout_date) {
@@ -352,18 +379,26 @@ app.post('/api/sessions', authenticateToken, (req, res) => {
     }
   }
 
+  console.log('New streak:', newStreak)
+
   db.prepare('UPDATE users SET streak = ?, last_workout_date = ? WHERE id = ?').run(newStreak, today, req.user.id)
 
   const progress = db.prepare('SELECT * FROM user_progress WHERE user_id = ? AND date = ?').get(req.user.id, today)
+  console.log('Existing progress for today:', progress)
+
   const updatedSteps = progress ? progress.steps : 0
   const updatedCalories = (progress ? progress.calories_burned : 0) + caloriesBurned
   const updatedActive = (progress ? progress.active_minutes : 0) + duration
   const updatedHeart = progress ? progress.heart_rate_avg : null
 
+  console.log('Updated progress values:', { updatedSteps, updatedCalories, updatedActive, updatedHeart })
+
   db.prepare(`
     INSERT OR REPLACE INTO user_progress (user_id, date, steps, calories_burned, active_minutes, heart_rate_avg)
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(req.user.id, today, updatedSteps, updatedCalories, updatedActive, updatedHeart)
+
+  console.log('Progress updated for user', req.user.id, 'on date', today)
 
   const unlockAchievement = (type) => {
     const exists = db.prepare('SELECT id FROM achievements WHERE user_id = ? AND achievement_type = ?').get(req.user.id, type)
@@ -405,7 +440,10 @@ app.post('/api/progress', authenticateToken, (req, res) => {
 })
 
 app.get('/api/progress', authenticateToken, (req, res) => {
+  console.log('Progress API called for user:', req.user.id)
   const { startDate, endDate } = req.query
+  console.log('Date range:', startDate, 'to', endDate)
+  console.log('Server current date:', new Date().toISOString().split('T')[0])
 
   let query = 'SELECT * FROM user_progress WHERE user_id = ?'
   let params = [req.user.id]
@@ -418,6 +456,9 @@ app.get('/api/progress', authenticateToken, (req, res) => {
   query += ' ORDER BY date DESC'
 
   const progress = db.prepare(query).all(...params)
+  console.log('Progress data found:', progress.length, 'records')
+  console.log('Progress data:', progress)
+
   res.json(progress)
 })
 
@@ -435,6 +476,36 @@ app.post('/api/achievements', authenticateToken, (req, res) => {
 
   const result = db.prepare('INSERT INTO achievements (user_id, achievement_type) VALUES (?, ?)').run(req.user.id, achievementType)
   res.json({ id: result.lastInsertRowid })
+})
+
+// Personal Records routes
+app.get('/api/personal-records', authenticateToken, (req, res) => {
+  console.log('Fetching personal records for user:', req.user.id)
+  const records = db.prepare('SELECT * FROM personal_records WHERE user_id = ? ORDER BY exercise_name').all(req.user.id)
+  console.log('Personal records found:', records)
+  res.json(records)
+})
+
+app.post('/api/personal-records', authenticateToken, (req, res) => {
+  const { exercise_name, value, unit } = req.body
+
+  if (!exercise_name || value === undefined || !unit) {
+    return res.status(400).json({ error: 'Exercise name, value, and unit are required' })
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+
+  const result = db.prepare(`
+    INSERT INTO personal_records (user_id, exercise_name, value, unit, achieved_date, updated_at)
+    VALUES (?, ?, ?, ?, ?, datetime('now'))
+    ON CONFLICT(user_id, exercise_name) DO UPDATE SET 
+      value = excluded.value,
+      achieved_date = excluded.achieved_date,
+      updated_at = datetime('now')
+  `).run(req.user.id, exercise_name, value, unit, today)
+
+  console.log('Personal record saved/updated:', exercise_name, value, unit)
+  res.json({ success: true, message: 'Personal record updated' })
 })
 
 // Dashboard data
@@ -478,6 +549,35 @@ app.get('/api/dashboard', authenticateToken, (req, res) => {
   })
 })
 
+// Debug endpoint to check database state
+app.get('/api/debug', authenticateToken, (req, res) => {
+  console.log('Debug endpoint called for user:', req.user.id)
+
+  const sessions = db.prepare('SELECT * FROM workout_sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT 10').all(req.user.id)
+  const progress = db.prepare('SELECT * FROM user_progress WHERE user_id = ? ORDER BY date DESC LIMIT 10').all(req.user.id)
+  const user = db.prepare('SELECT id, username, streak, last_workout_date FROM users WHERE id = ?').get(req.user.id)
+
+  console.log('Debug data:', { sessions: sessions.length, progress: progress.length, user })
+
+  res.json({
+    user,
+    sessions,
+    progress
+  })
+})
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+})
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  // Don't exit the process, just log the error
+})
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error)
+  // Don't exit the process, just log the error
 })

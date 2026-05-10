@@ -10,8 +10,18 @@ const navItems = [
   { to: '/profile',  icon: User,            label: 'Profile'   },
 ]
 
+function userInitial(user) {
+  if (!user) return 'U'
+  const name = typeof user.name === 'string' ? user.name.trim() : ''
+  if (name) return name[0].toUpperCase()
+  const email = typeof user.email === 'string' ? user.email.trim() : ''
+  if (email) return email[0].toUpperCase()
+  return 'U'
+}
+
 export default function Navbar() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const initial = userInitial(user)
 
   return (
     <>
@@ -56,7 +66,14 @@ export default function Navbar() {
             <LogOut size={14} style={{ marginRight: '4px' }} />
             Logout
           </button>
-          <div className="avatar-btn" title="User">U</div>
+          <NavLink
+            to="/profile"
+            className="avatar-btn"
+            title="Profile"
+            aria-label="Go to profile"
+          >
+            {initial}
+          </NavLink>
         </div>
       </motion.header>
 

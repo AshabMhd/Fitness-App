@@ -36,6 +36,11 @@ const apiRequest = async (endpoint, options = {}) => {
     throw new ApiError(message, response.status)
   }
 
+  // Ensure we return arrays as arrays, not null
+  if (data === null && response.ok) {
+    return []
+  }
+
   return data
 }
 
@@ -107,7 +112,10 @@ export const progress = {
     const params = new URLSearchParams()
     if (startDate) params.append('startDate', startDate)
     if (endDate) params.append('endDate', endDate)
-    return apiRequest(`/progress?${params}`)
+    const queryString = params.toString()
+    const url = `/progress${queryString ? '?' + queryString : ''}`
+    console.log('Fetching progress from:', url)
+    return apiRequest(url)
   },
 }
 
@@ -116,6 +124,14 @@ export const achievements = {
   unlock: (achievementType) => apiRequest('/achievements', {
     method: 'POST',
     body: JSON.stringify({ achievementType }),
+  }),
+}
+
+export const personalRecords = {
+  get: () => apiRequest('/personal-records'),
+  update: (exerciseName, value, unit) => apiRequest('/personal-records', {
+    method: 'POST',
+    body: JSON.stringify({ exercise_name: exerciseName, value, unit }),
   }),
 }
 
@@ -130,5 +146,6 @@ export default {
   sessions,
   progress,
   achievements,
+  personalRecords,
   dashboard,
 }

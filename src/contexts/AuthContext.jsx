@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { auth } from '../utils/api'
+import { auth, user as userApi } from '../utils/api'
 
 const AuthContext = createContext()
 
@@ -25,6 +25,10 @@ export const AuthProvider = ({ children }) => {
     const saved = window.localStorage.getItem('fitpulse-font-size')
     return saved || 'md'
   })
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('fitpulse-privacy-mode') === '1'
+  })
 
   useEffect(() => {
     document.body.classList.toggle('dark', darkMode)
@@ -32,20 +36,52 @@ export const AuthProvider = ({ children }) => {
   }, [darkMode])
 
   useEffect(() => {
+    const basePx = 16
     const sizes = { sm: 14, md: 16, lg: 18, xl: 20 }
-    document.documentElement.style.fontSize = sizes[fontSize] + 'px'
+    const px = sizes[fontSize] ?? basePx
+    const scale = px / basePx
+
+    document.documentElement.style.fontSize = `${basePx}px`
+    document.documentElement.style.setProperty('--fitpulse-text-scale', String(scale))
+    document.documentElement.dataset.textSize = fontSize
+
+    if (typeof document.documentElement.style.zoom !== 'undefined') {
+      document.documentElement.style.zoom = scale === 1 ? '1' : String(scale)
+    } else {
+      document.documentElement.style.fontSize = `${px}px`
+    }
+
     window.localStorage.setItem('fitpulse-font-size', fontSize)
   }, [fontSize])
 
   useEffect(() => {
-    // Check if user is logged in on app start
+    window.localStorage.setItem('fitpulse-privacy-mode', privacyMode ? '1' : '0')
+    document.documentElement.dataset.privacyMode = privacyMode ? 'on' : 'off'
+  }, [privacyMode])
+
+  useEffect(() => {
     const token = localStorage.getItem('token')
-    if (token) {
-      // Token exists, assume user is logged in
-      // In a real app, you'd validate the token with the server
-      setUser({ token })
+    if (!token) {
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const profile = await userApi.getProfile()
+        if (!cancelled) setUser({ token, ...profile })
+      } catch {
+        localStorage.removeItem('token')
+        if (!cancelled) setUser(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = async (email, password) => {
@@ -75,16 +111,30 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
+  const refreshUser = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+    try {
+      const profile = await userApi.getProfile()
+      setUser({ token, ...profile })
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const value = {
     user,
     login,
     register,
     logout,
+    refreshUser,
     loading,
     darkMode,
     setDarkMode,
     fontSize,
-    setFontSize
+    setFontSize,
+    privacyMode,
+    setPrivacyMode
   }
 
   return (

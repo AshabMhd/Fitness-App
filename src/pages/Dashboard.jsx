@@ -4,6 +4,7 @@ import { ChevronRight, Play, Target, Zap, TrendingUp, Activity, ArrowRight } fro
 import { Link } from 'react-router-dom'
 import { dashboard, workouts } from '../utils/api'
 import { useAuth } from '../contexts/AuthContext'
+import { PRIVACY_MASK } from '../utils/privacyDisplay'
 
 const quotes = [
   { text: "Every set, every rep — you're forging a stronger version of yourself.", author: "FitPulse" },
@@ -12,15 +13,16 @@ const quotes = [
   { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
 ]
 
-function AnimatedRing({ pct, color, size=92, stroke=8, label, value, unit }) {
+function AnimatedRing({ pct, color, size=92, stroke=8, label, value, unit, privacyMode }) {
   const r = (size - stroke) / 2
   const circ = 2 * Math.PI * r
+  const ringPct = privacyMode ? 0 : pct
   const [offset, setOffset] = useState(circ)
 
   useEffect(() => {
-    const t = setTimeout(() => setOffset(circ - (pct / 100) * circ), 400)
+    const t = setTimeout(() => setOffset(circ - (ringPct / 100) * circ), 400)
     return () => clearTimeout(t)
-  }, [pct, circ])
+  }, [ringPct, circ])
 
   return (
     <div style={{ textAlign:'center' }}>
@@ -36,13 +38,13 @@ function AnimatedRing({ pct, color, size=92, stroke=8, label, value, unit }) {
         </svg>
         <div className="ring-center">
           <div style={{ fontFamily:'Inter, sans-serif', fontSize:14, fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.5px' }}>
-            {value.toLocaleString()}
+            {privacyMode ? PRIVACY_MASK : value.toLocaleString()}
           </div>
-          {unit && <div style={{ fontSize:9, color:'var(--text-faint)', fontWeight:500, marginTop:1 }}>{unit}</div>}
+          {unit && !privacyMode && <div style={{ fontSize:9, color:'var(--text-faint)', fontWeight:500, marginTop:1 }}>{unit}</div>}
         </div>
       </div>
       <div style={{ fontSize:12, color:'var(--text-secondary)', marginTop:8, fontWeight:500 }}>{label}</div>
-      <div style={{ fontSize:10, color:'var(--text-faint)', marginTop:2 }}>{pct}% of goal</div>
+      <div style={{ fontSize:10, color:'var(--text-faint)', marginTop:2 }}>{privacyMode ? '—' : `${pct}% of goal`}</div>
     </div>
   )
 }
@@ -64,7 +66,7 @@ export default function Dashboard() {
   const [quickWorkouts, setQuickWorkouts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { darkMode } = useAuth()
+  const { darkMode, privacyMode } = useAuth()
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -138,6 +140,15 @@ export default function Dashboard() {
     time: new Date(session.end_time).toLocaleDateString(),
     color: session.category === 'cardio' ? '#F43F5E' : session.category === 'strength' ? '#3B82F6' : session.category === 'yoga' ? '#10B981' : '#F59E0B'
   }))
+  const recentActivityDisplay = privacyMode
+    ? recentActivity.map(() => ({
+        icon: '🔒',
+        title: 'Hidden activity',
+        sub: 'Privacy mode is on',
+        time: PRIVACY_MASK,
+        color: '#94a3b8',
+      }))
+    : recentActivity
 
   return (
     <div className="page-inner">
@@ -206,7 +217,7 @@ export default function Dashboard() {
               style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, padding:'20px 24px', borderRadius:20, background:'var(--bg-panel)', border:'1px solid rgba(226,232,240,0.8)', backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.08)', flexShrink:0 }}
             >
               <span style={{ fontSize:36, animation:'flameDance 1.5s ease-in-out infinite' }}>🔥</span>
-              <div style={{ fontFamily:'Inter', fontSize:32, fontWeight:800, color:'#F59E0B', lineHeight:1, letterSpacing:'-1px' }}>{dashboardData?.streak || 0}</div>
+              <div style={{ fontFamily:'Inter', fontSize:32, fontWeight:800, color:'#F59E0B', lineHeight:1, letterSpacing:'-1px' }}>{privacyMode ? PRIVACY_MASK : (dashboardData?.streak || 0)}</div>
               <div style={{ fontSize:10, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Day Streak</div>
             </motion.div>
           </div>
@@ -228,7 +239,7 @@ export default function Dashboard() {
 
         <div style={{ display:'flex', justifyContent:'space-around', flexWrap:'wrap', gap:20, marginBottom:24 }}>
           {activityData.map(item => (
-            <AnimatedRing key={item.label} pct={item.pct} color={item.color} label={item.label} value={item.value} unit={item.unit} />
+            <AnimatedRing key={item.label} privacyMode={privacyMode} pct={item.pct} color={item.color} label={item.label} value={item.value} unit={item.unit} />
           ))}
         </div>
 
@@ -239,12 +250,14 @@ export default function Dashboard() {
               <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:7 }}>
                 <span style={{ color:'var(--text-secondary)', fontWeight:500 }}>{item.emoji} {item.label}</span>
                 <span style={{ color:'var(--text-primary)', fontWeight:700 }}>
-                  {item.value.toLocaleString()}{item.unit && ` ${item.unit}`}
-                  <span style={{ color:'var(--text-faint)', fontWeight:400 }}> / {item.target.toLocaleString()}</span>
+                  {privacyMode ? PRIVACY_MASK : `${item.value.toLocaleString()}${item.unit ? ` ${item.unit}` : ''}`}
+                  {!privacyMode && (
+                    <span style={{ color:'var(--text-faint)', fontWeight:400 }}> / {item.target.toLocaleString()}</span>
+                  )}
                 </span>
               </div>
               <div className="progress-track">
-                <div className="progress-fill" style={{ width:`${item.pct}%`, background:item.color }} />
+                <div className="progress-fill" style={{ width:`${privacyMode ? 0 : item.pct}%`, background:item.color }} />
               </div>
             </div>
           ))}
@@ -314,14 +327,18 @@ export default function Dashboard() {
               <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:8 }}>
                 <span style={{ color:'var(--text-secondary)', fontWeight:500 }}>{g.label}</span>
                 <span style={{ color:'var(--text-primary)', fontWeight:700 }}>
-                  {g.done}<span style={{ color:'var(--text-faint)', fontWeight:400 }}>/{g.total}</span>
+                  {privacyMode ? (
+                    <>{PRIVACY_MASK}<span style={{ color:'var(--text-faint)', fontWeight:400 }}>/{PRIVACY_MASK}</span></>
+                  ) : (
+                    <>{g.done}<span style={{ color:'var(--text-faint)', fontWeight:400 }}>/{g.total}</span></>
+                  )}
                 </span>
               </div>
               <div className="progress-track">
                 <motion.div
                   className="progress-fill"
                   initial={{ width:0 }}
-                  animate={{ width:`${(g.done/g.total)*100}%` }}
+                  animate={{ width:`${privacyMode ? 0 : (g.done/g.total)*100}%` }}
                   transition={{ duration:1.2, delay:0.5 }}
                   style={{ background:g.color }}
                 />
@@ -340,22 +357,22 @@ export default function Dashboard() {
             <div key={m.label} className="metric-row">
               <span style={{ fontSize:13, color:'var(--text-secondary)', fontWeight:500 }}>{m.label}</span>
               <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>{m.v}</div>
-                <div style={{ fontSize:11, color: m.up ? '#10B981' : '#3B82F6', fontWeight:600 }}>{m.delta}</div>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>{privacyMode ? PRIVACY_MASK : m.v}</div>
+                <div style={{ fontSize:11, color: privacyMode ? 'var(--text-faint)' : (m.up ? '#10B981' : '#3B82F6'), fontWeight:600 }}>{privacyMode ? '—' : m.delta}</div>
               </div>
             </div>
           ))}
         </motion.div>
 
       {/* ── Daily Fuel ── */}
-      <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ background:'linear-gradient(135deg, #EEF4FF 0%, #F5F9FF 100%)', border:'1px solid rgba(59,130,246,0.15)', position:'relative', overflow:'hidden', marginBottom:24 }}>
+      {/* <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ background:'linear-gradient(135deg, #EEF4FF 0%, #F5F9FF 100%)', border:'1px solid rgba(59,130,246,0.15)', position:'relative', overflow:'hidden', marginBottom:24 }}>
         <div style={{ position:'absolute', top:-10, right:10, fontSize:100, opacity:0.06, fontFamily:'Georgia', color:'#3B82F6', lineHeight:1 }}>\"</div>
         <div style={{ fontSize:11, color:'var(--blue)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:14 }}>Daily Fuel ⚡</div>
         <p style={{ fontSize:16, lineHeight:1.75, fontStyle:'italic', color:'var(--text-primary)', marginBottom:14, position:'relative' }}>
           "{quote.text}"
         </p>
         <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>— {quote.author}</p>
-      </motion.div>
+      </motion.div> */}
 
       {/* ── Recent Activity ── */}
       <div className="g2">
@@ -373,7 +390,7 @@ export default function Dashboard() {
         <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card">
           <h2 className="section-title">Recent Activity</h2>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-            {recentActivity.map((item, i) => (
+            {recentActivityDisplay.map((item, i) => (
               <Link key={i} to="/workouts" style={{ textDecoration:'none' }}>
                 <motion.div initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} transition={{ delay: 0.6 + i*0.1 }} whileHover={{ x:4, boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }} style={{ display:'flex', alignItems:'center', gap:14, padding:'8px 0', cursor:'pointer', borderRadius:8 }}>
                   <div style={{ width:44, height:44, borderRadius:14, background:`${item.color}12`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, border:`1px solid ${item.color}22` }}>

@@ -3,6 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause, RotateCcw, CheckCircle2, ChevronDown, ChevronUp, Clock, Flame } from 'lucide-react'
 import ExerciseModal from '../components/ExerciseModal'
 import { workouts as workoutsApi, sessions } from '../utils/api'
+import { useAuth } from '../contexts/AuthContext'
+import { PRIVACY_MASK } from '../utils/privacyDisplay'
+
+function privacySafePlanToast(privacyMode, msg) {
+  if (!msg) return msg
+  if (!privacyMode) return msg
+  if (msg.includes('Loaded')) return 'A saved plan was loaded into your session.'
+  if (msg.includes('deleted')) return 'Saved plan deleted.'
+  if (msg.includes('Custom workout')) return 'Custom workout added to your session.'
+  if (msg.includes('Saved') && msg.includes('plan')) return 'Your workout plan was saved.'
+  return 'Done.'
+}
 
 const categories = [
   { id: 'all',      label: 'All',      emoji: '⚡' },
@@ -38,6 +50,7 @@ function Timer({ running, seconds, setSeconds }) {
 }
 
 export default function WorkoutTracker() {
+  const { privacyMode } = useAuth()
   const [workouts, setWorkouts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -110,7 +123,7 @@ export default function WorkoutTracker() {
 
   const filtered = workouts.filter(w => cat === 'all' || w.category === cat)
   const doneCount = exercises.filter(e => e.done).length
-  const pct = Math.round((doneCount / exercises.length) * 100)
+  const pct = exercises.length ? Math.round((doneCount / exercises.length) * 100) : 0
   const allDone = exercises.length > 0 && exercises.every(e => e.done)
   const sessionMinutes = Math.max(1, Math.round(seconds / 60))
 
@@ -197,6 +210,15 @@ export default function WorkoutTracker() {
     setCustomError(null)
 
     try {
+      console.log('Creating session with data:', {
+        workoutId: null,
+        startTime: sessionStart ? sessionStart.toISOString() : new Date(Date.now() - seconds * 1000).toISOString(),
+        endTime: new Date().toISOString(),
+        duration: sessionMinutes,
+        caloriesBurned: Math.max(50, sessionMinutes * 10),
+        completed: true,
+      })
+      
       const response = await sessions.create({
         workoutId: null,
         startTime: sessionStart ? sessionStart.toISOString() : new Date(Date.now() - seconds * 1000).toISOString(),
@@ -206,11 +228,18 @@ export default function WorkoutTracker() {
         completed: true,
       })
 
-      const streakText = response.streak ? `${response.streak}-day streak` : 'new streak'
-      setCongrats(`Congratulations! You finished your workout and locked in a ${streakText}.`)
+      console.log('Session creation response:', response)
+
+      if (privacyMode) {
+        setCongrats('Workout saved. Great job completing your session.')
+      } else {
+        const streakText = response.streak ? `${response.streak}-day streak` : 'new streak'
+        setCongrats(`Congratulations! You finished your workout and locked in a ${streakText}.`)
+      }
       setSessionComplete(true)
       setRunning(false)
     } catch (err) {
+      console.error('Error creating session:', err)
       setSaveError(err.message || 'Could not save your workout.')
     } finally {
       setPendingSave(false)
@@ -350,8 +379,8 @@ export default function WorkoutTracker() {
             <h2 style={{ fontFamily:'Inter', fontSize:18, fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.3px' }}>Morning Power Circuit</h2>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <span className="badge badge-success">{doneCount}/{exercises.length} done</span>
-            <span className="badge badge-muted">{pct}% complete</span>
+            <span className="badge badge-success">{privacyMode ? PRIVACY_MASK : `${doneCount}/${exercises.length} done`}</span>
+            <span className="badge badge-muted">{privacyMode ? PRIVACY_MASK : `${pct}% complete`}</span>
           </div>
         </div>
 
@@ -367,7 +396,7 @@ export default function WorkoutTracker() {
 
         <div style={{ display:'flex', gap:28, alignItems:'center', flexWrap:'wrap' }}>
           {/* Timer */}
-          <div style={{ textAlign:'center' }}>
+            <div style={{ textAlign:'center' }}>
             <div className="timer-display gt-blue"><Timer running={running} seconds={seconds} setSeconds={setSeconds} /></div>
             <div style={{ fontSize:11, color:'var(--text-faint)', marginTop:3, fontWeight:500, textTransform:'uppercase', letterSpacing:'0.05em' }}>Elapsed</div>
           </div>
@@ -401,13 +430,13 @@ export default function WorkoutTracker() {
           <div style={{ flex:1, minWidth:160 }}>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:8 }}>
               <span style={{ color:'var(--text-secondary)', fontWeight:500 }}>Session Progress</span>
-              <span style={{ fontWeight:700, color:'var(--blue)' }}>{pct}%</span>
+              <span style={{ fontWeight:700, color:'var(--blue)' }}>{privacyMode ? PRIVACY_MASK : `${pct}%`}</span>
             </div>
             <div className="progress-track" style={{ height:8, borderRadius:9999 }}>
               <motion.div
                 className="progress-fill"
                 initial={{ width:0 }}
-                animate={{ width:`${pct}%` }}
+                animate={{ width:`${privacyMode ? 0 : pct}%` }}
                 transition={{ duration:1, delay:0.4 }}
               />
             </div>
@@ -579,7 +608,7 @@ export default function WorkoutTracker() {
                 <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>Plan Summary</div>
                 <div style={{ fontSize:12, color:'var(--text-muted)' }}>Current session has {exercises.length} exercises.</div>
                 <div style={{ fontSize:12, color:'var(--text-muted)' }}>After saving, this workout plan will be available in your saved routines.</div>
-                {planSaved && <div style={{ color:'#065f46', fontSize:13 }}>{planSaved}</div>}
+                {planSaved && <div style={{ color:'#065f46', fontSize:13 }}>{privacySafePlanToast(privacyMode, planSaved)}</div>}
               </div>
             </div>
           </div>
@@ -612,8 +641,8 @@ export default function WorkoutTracker() {
               <div key={plan.id} style={{ padding:'18px', borderRadius:20, background:'var(--bg-white)', border:'1px solid var(--border)', display:'flex', flexDirection:'column', gap:10, color:'var(--text-primary)' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
                   <div>
-                    <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>{plan.name}</div>
-                    <div style={{ fontSize:12, color:'var(--text-muted)' }}>{plan.exercises.length} exercises</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:'var(--text-primary)' }}>{privacyMode ? 'Saved plan' : plan.name}</div>
+                    <div style={{ fontSize:12, color:'var(--text-muted)' }}>{privacyMode ? PRIVACY_MASK : `${plan.exercises.length} exercises`}</div>
                   </div>
                   <div style={{ display:'flex', gap:8 }}>
                     <motion.button
@@ -634,7 +663,7 @@ export default function WorkoutTracker() {
                 </div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                   {plan.exercises.slice(0, 4).map((ex, idx) => (
-                    <span key={`${plan.id}-${idx}`} style={{ padding:'6px 10px', borderRadius:9999, background:'rgba(59,130,246,0.08)', color:'#1d4ed8', fontSize:11, fontWeight:600 }}>{ex.name}</span>
+                    <span key={`${plan.id}-${idx}`} style={{ padding:'6px 10px', borderRadius:9999, background:'rgba(59,130,246,0.08)', color:'#1d4ed8', fontSize:11, fontWeight:600 }}>{privacyMode ? '•••' : ex.name}</span>
                   ))}
                 </div>
               </div>

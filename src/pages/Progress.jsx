@@ -5,7 +5,7 @@ import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { TrendingUp, Award, Target, Zap, Lock } from 'lucide-react'
+import { TrendingUp, Award, Target, Zap, Lock, Footprints, Flame } from 'lucide-react'
 import { user, progress, sessions, personalRecords } from '../utils/api'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -43,6 +43,19 @@ const cardVariants = {
   visible: i => ({ opacity:1, y:0, transition:{ duration:0.55, delay:i*0.1, ease:[0.4,0,0.2,1] } }),
 }
 
+const formatDateKey = (date) => date.toISOString().split('T')[0]
+
+function normalizeProgressDate(value) {
+  if (!value) return ''
+  const raw = String(value)
+  if (raw.includes('T')) return raw.split('T')[0]
+  try {
+    return formatDateKey(new Date(raw))
+  } catch {
+    return raw
+  }
+}
+
 export default function Progress() {
   const navigate = useNavigate()
   const { privacyMode } = useAuth()
@@ -52,6 +65,7 @@ export default function Progress() {
   const [monthlyCalories, setMonthlyCalories] = useState([])
   const [muscleFreq, setMuscleFreq] = useState([])
   const [heatData, setHeatData] = useState([])
+  const [selectedHeatDate, setSelectedHeatDate] = useState('')
   const [summary, setSummary] = useState([])
   const [personalRecordsData, setPersonalRecordsData] = useState([])
   const [loading, setLoading] = useState(true)
@@ -173,7 +187,7 @@ export default function Progress() {
         }
 
         try {
-          processSummary(dataToProcess, recentSessions, profileData)
+          processSummary(dataToProcess, recentSessions)
         } catch (err) {
           console.error('Error processing summary:', err)
           setSummary([])
@@ -203,6 +217,16 @@ export default function Progress() {
   )
   const heatChartData = useMemo(
     () => (privacyMode ? anonymizeHeatCells(heatData) : heatData),
+    [heatData, privacyMode]
+  )
+  const selectedHeatDay = useMemo(() => {
+    if (!heatChartData.length) return null
+    const selected = heatChartData.find((day) => day.date === selectedHeatDate)
+    if (selected) return selected
+    return [...heatChartData].reverse().find((day) => day.level > 0) || heatChartData[heatChartData.length - 1]
+  }, [heatChartData, selectedHeatDate])
+  const heatmapActiveDays = useMemo(
+    () => (privacyMode ? 0 : heatData.filter((day) => day.level > 0).length),
     [heatData, privacyMode]
   )
   const summaryDisplay = useMemo(() => {
@@ -388,113 +412,115 @@ export default function Progress() {
 
   const processHeatmap = (progressData) => {
     try {
-      const last28Days = Array.from({ length: 28 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (27 - i))
-        return date.toISOString().split('T')[0]
-      })
-
       const dataArray = Array.isArray(progressData) ? progressData : []
+      const today = new Date()
+      const weekStart = new Date(today)
+      const mondayOffset = (weekStart.getDay() + 6) % 7
+      weekStart.setDate(weekStart.getDate() - mondayOffset - 21)
+
+      const progressByDate = dataArray.reduce((acc, entry) => {
+        const dateKey = normalizeProgressDate(entry?.date)
+        if (!dateKey) return acc
+
+        if (!acc[dateKey]) {
+          acc[dateKey] = { steps: 0, calories_burned: 0, active_minutes: 0 }
+        }
+
+        acc[dateKey].steps += Number(entry?.steps) || 0
+        acc[dateKey].calories_burned += Number(entry?.calories_burned) || 0
+        acc[dateKey].active_minutes += Number(entry?.active_minutes) || 0
+        return acc
+      }, {})
+
+      const last28Days = Array.from({ length: 28 }, (_, i) => {
+        const date = new Date(weekStart)
+        date.setDate(weekStart.getDate() + i)
+        return date
+      })
 
       const data = last28Days.map(date => {
-        // Find all entries for this date and aggregate them
-        const dayEntries = dataArray.filter(p => {
-          if (!p || !p.date) return false
-          const pDate = String(p.date || '')
-          const targetDate = date
-          try {
-            if (pDate === targetDate) return true
-            if (pDate.includes && pDate.includes('T')) {
-              if (pDate.split('T')[0] === targetDate) return true
-            }
-            const pDateObj = new Date(pDate)
-            const targetDateObj = new Date(targetDate)
-            return pDateObj.toDateString() === targetDateObj.toDateString()
-          } catch (e) {
-            return false
-          }
-        })
-        
-        const aggregated = dayEntries.reduce((acc, entry) => ({
-          steps: acc.steps + (Number(entry?.steps) || 0),
-          calories_burned: acc.calories_burned + (Number(entry?.calories_burned) || 0),
-          active_minutes: acc.active_minutes + (Number(entry?.active_minutes) || 0)
-        }), { steps: 0, calories_burned: 0, active_minutes: 0 })
-        
+        const dateKey = formatDateKey(date)
+        const aggregated = progressByDate[dateKey] || { steps: 0, calories_burned: 0, active_minutes: 0 }
+        const stepScore = Math.min(1, aggregated.steps / 8000)
+        const calorieScore = Math.min(1, aggregated.calories_burned / 500)
+        const activeScore = Math.min(1, aggregated.active_minutes / 60)
+        const score = (stepScore * 0.45) + (calorieScore * 0.25) + (activeScore * 0.3)
+
         let level = 0
-        const activity = aggregated.steps + aggregated.active_minutes + aggregated.calories_burned
-        if (activity > 10000) level = 4
-        else if (activity > 5000) level = 3
-        else if (activity > 2000) level = 2
-        else if (activity > 0) level = 1
-        
-        return { day: i, level }
+        if (score >= 0.85) level = 4
+        else if (score >= 0.55) level = 3
+        else if (score >= 0.25) level = 2
+        else if (aggregated.steps > 0 || aggregated.calories_burned > 0 || aggregated.active_minutes > 0) level = 1
+
+        return {
+          date: dateKey,
+          label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          steps: aggregated.steps,
+          calories: aggregated.calories_burned,
+          active: aggregated.active_minutes,
+          level,
+          score: Math.round(score * 100),
+        }
       })
 
-      // Add some default activity levels if all are 0
-      if (data.every(d => d.level === 0)) {
-        for (let i = 0; i < data.length; i++) {
-          if (Math.random() > 0.7) {
-            data[i].level = Math.floor(Math.random() * 4) + 1
-          }
-        }
-      }
-
       setHeatData(data)
+      setSelectedHeatDate(current => current || [...data].reverse().find(day => day.level > 0)?.date || data[data.length - 1]?.date || '')
     } catch (err) {
       console.error('Error in processHeatmap:', err)
       throw err
     }
   }
 
-  const processSummary = (progressData, recentSessions, profileData) => {
+  const processSummary = (progressData, recentSessions) => {
     try {
       const dataArray = Array.isArray(progressData) ? progressData : []
       const sessionsArray = Array.isArray(recentSessions) ? recentSessions : []
-      
+
       console.log('Summary - Sessions array:', sessionsArray.length, 'records')
       console.log('Summary - Progress data array:', dataArray.length, 'records')
-      
+
       const totalWorkouts = sessionsArray.length || 0
+      const totalSteps = dataArray.reduce((sum, p) => sum + (Number(p?.steps) || 0), 0)
       const totalCalories = dataArray.reduce((sum, p) => sum + (Number(p?.calories_burned) || 0), 0)
-      const avgActive = dataArray.length > 0 
+      const avgActive = dataArray.length > 0
         ? Math.round(dataArray.reduce((sum, p) => sum + (Number(p?.active_minutes) || 0), 0) / dataArray.length)
         : 0
 
-      console.log('Summary calculations:', { totalWorkouts, totalCalories, avgActive })
+      console.log('Summary calculations:', { totalWorkouts, totalSteps, totalCalories, avgActive })
 
       const summaryData = [
-        { 
-          label: 'Total Workouts', 
-          v: totalWorkouts.toString(), 
-          sub: 'this month', 
-          color: '#3B82F6', 
-          icon: <Zap size={20} color="#3B82F6"/>, 
-          delta: totalWorkouts > 0 ? '+12%' : '–' 
+        {
+          label: 'Total Workouts',
+          v: totalWorkouts.toString(),
+          sub: 'this month',
+          color: '#3B82F6',
+          icon: <Zap size={20} color="#3B82F6"/>,
+          delta: totalWorkouts > 0 ? '+12%' : '-'
         },
-        { 
-          label: 'Calories Burned', 
-          v: `${(totalCalories / 1000).toFixed(1)}k`, 
-          sub: 'this month', 
-          color: '#F59E0B', 
-          icon: <span style={{fontSize:20}}>🔥</span>, 
-          delta: totalCalories > 0 ? '+8%' : '–' 
+        {
+          label: 'Steps Added',
+          v: totalSteps.toLocaleString(),
+          sub: 'last 30 days',
+          color: '#06B6D4',
+          icon: <Footprints size={20} color="#06B6D4"/>,
+          delta: totalSteps > 0 ? `${Math.round(totalSteps / 8000)} goal days` : '-'
         },
-        { 
-          label: 'Avg Active Min', 
-          v: avgActive.toString(), 
-          sub: 'per day', 
-          color: '#10B981', 
-          icon: <Target size={20} color="#10B981"/>, 
-          delta: avgActive > 0 ? '+5%' : '–' 
+        {
+          label: 'Calories Burned',
+          v: `${(totalCalories / 1000).toFixed(1)}k`,
+          sub: 'this month',
+          color: '#F59E0B',
+          icon: <Flame size={20} color="#F59E0B"/>,
+          delta: totalCalories > 0 ? '+8%' : '-'
         },
-        { 
-          label: 'Best Streak', 
-          v: profileData && profileData.streak ? `${profileData.streak}` : '–', 
-          sub: 'days', 
-          color: '#8B5CF6', 
-          icon: <span style={{fontSize:20}}>⚡</span>, 
-          delta: '🔥' 
+        {
+          label: 'Avg Active Min',
+          v: avgActive.toString(),
+          sub: 'per day',
+          color: '#10B981',
+          icon: <Target size={20} color="#10B981"/>,
+          delta: avgActive > 0 ? '+5%' : '-'
         },
       ]
 
@@ -753,8 +779,11 @@ export default function Progress() {
       {/* Heatmap */}
       <motion.div custom={8} variants={cardVariants} initial="hidden" animate="visible" className="card" style={{ marginBottom:24 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
-          <h2 className="section-title" style={{ marginBottom:0 }}>Training Heatmap</h2>
-          <span className="badge badge-muted">Last 28 days</span>
+          <div>
+            <h2 className="section-title" style={{ marginBottom:2 }}>Training Heatmap</h2>
+            <div className="section-meta">{privacyMode ? 'Activity hidden in privacy mode' : `${heatmapActiveDays} active days in the last 4 weeks`}</div>
+          </div>
+          <span className="badge badge-muted">Mon-Sun</span>
         </div>
         <div style={{ display:'flex', gap:6, marginBottom:10 }}>
           {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>(
@@ -763,9 +792,45 @@ export default function Progress() {
         </div>
         <div className="heatmap-grid">
           {heatChartData.map((c,i)=>(
-            <div key={i} className="heat-cell" data-level={c.level} title={['Rest','Light','Moderate','Intense','Peak'][c.level]}/>
+            <button
+              key={c.date || i}
+              type="button"
+              className="heat-cell"
+              data-level={c.level}
+              title={privacyMode ? 'Hidden in privacy mode' : `${c.label}: ${['Rest','Light','Moderate','Intense','Peak'][c.level]} training`}
+              aria-label={privacyMode ? 'Hidden training day' : `${c.weekday} ${c.label}, ${['Rest','Light','Moderate','Intense','Peak'][c.level]} training`}
+              onClick={() => setSelectedHeatDate(c.date)}
+              style={{
+                border: c.date === selectedHeatDay?.date ? '2px solid var(--text-primary)' : '1px solid transparent',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            />
           ))}
         </div>
+        {selectedHeatDay && (
+          <div style={{ marginTop:16, padding:'14px 16px', borderRadius:14, border:'1px solid var(--border)', background:'var(--bg-subtle)', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:12 }}>
+            <div>
+              <div style={{ fontSize:11, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Selected Day</div>
+              <div style={{ fontSize:14, color:'var(--text-primary)', fontWeight:700, marginTop:3 }}>
+                {privacyMode ? PRIVACY_MASK : `${selectedHeatDay.weekday}, ${selectedHeatDay.label}`}
+              </div>
+            </div>
+            {[
+              { label: 'Steps', value: selectedHeatDay.steps?.toLocaleString?.() || '0' },
+              { label: 'Calories', value: `${selectedHeatDay.calories || 0} kcal` },
+              { label: 'Active', value: `${selectedHeatDay.active || 0} min` },
+              { label: 'Intensity', value: ['Rest','Light','Moderate','Intense','Peak'][selectedHeatDay.level] },
+            ].map(item => (
+              <div key={item.label}>
+                <div style={{ fontSize:11, color:'var(--text-faint)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>{item.label}</div>
+                <div style={{ fontSize:14, color:'var(--text-primary)', fontWeight:700, marginTop:3 }}>
+                  {privacyMode ? PRIVACY_MASK : item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:14, fontSize:11, color:'var(--text-faint)', fontWeight:500 }}>
           <span>Less</span>
           {[0,1,2,3,4].map(l=><div key={l} className="heat-cell" data-level={l} style={{ width:14, height:14, flexShrink:0, borderRadius:3 }}/>)}

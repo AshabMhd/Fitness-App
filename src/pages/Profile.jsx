@@ -204,15 +204,15 @@ export default function Profile() {
   const heroStats = privacyMode
     ? [
         { v: MASK_METRIC, l: 'Workouts' },
+        { v: MASK_METRIC, l: 'Total Steps' },
         { v: MASK_METRIC, l: 'Current Streak' },
         { v: MASK_METRIC, l: 'XP Earned' },
-        { v: MASK_METRIC, l: 'Hours Logged' },
       ]
     : [
         { v: userProfile?.completed_workouts || 0, l: 'Workouts' },
+        { v: (userProfile?.total_steps || 0).toLocaleString(), l: 'Total Steps' },
         { v: `${userProfile?.streak || 0}d`, l: 'Current Streak' },
         { v: `${userProfile?.total_xp || 0} XP`, l: 'XP Earned' },
-        { v: `${userProfile?.hours_logged || 0}h`, l: 'Hours Logged' },
       ]
 
   const achievements = [
@@ -634,10 +634,10 @@ export default function Profile() {
               Health data
             </h2>
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 14 }}>
-              Apple Health, Google Fit, and other wearables can be linked from the <strong>mobile app</strong> (Capacitor build). This web version records workouts and progress when you use the tracker and dashboard manually.
+              Apple Health, Google Fit, and other wearables can be linked from the <strong>mobile app</strong> (Capacitor build). This web version estimates steps from completed workout time and intensity, then records them with your progress.
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              Tip: finish sessions in Workout Tracker so steps and calories stay up to date in Progress.
+              Tip: finish sessions in Workout Tracker so steps, calories, and active minutes stay up to date in Progress.
             </p>
             <button type="button" onClick={() => setAccountModal(null)} className="btn btn-primary" style={{ marginTop: 20, width: '100%' }}>
               Got it

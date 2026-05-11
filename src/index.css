@@ -551,7 +551,7 @@ h1,h2,h3,h4,h5 {
 
 /* ═══ HEATMAP ═══ */
 .heatmap-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-.heat-cell { aspect-ratio:1; border-radius:5px; background:rgba(0,0,0,0.05); transition:var(--ease); }
+.heat-cell { display:block; width:100%; aspect-ratio:1; border-radius:5px; background:rgba(0,0,0,0.05); transition:var(--ease); appearance:none; }
 .heat-cell[data-level='1'] { background:rgba(59,130,246,0.15); }
 .heat-cell[data-level='2'] { background:rgba(59,130,246,0.35); }
 .heat-cell[data-level='3'] { background:rgba(59,130,246,0.6); }

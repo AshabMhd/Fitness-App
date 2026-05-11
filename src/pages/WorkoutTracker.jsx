@@ -234,7 +234,8 @@ export default function WorkoutTracker() {
         setCongrats('Workout saved. Great job completing your session.')
       } else {
         const streakText = response.streak ? `${response.streak}-day streak` : 'new streak'
-        setCongrats(`Congratulations! You finished your workout and locked in a ${streakText}.`)
+        const stepsText = response.stepsAdded ? ` Estimated ${response.stepsAdded.toLocaleString()} steps were added to today's progress.` : ''
+        setCongrats(`Congratulations! You finished your workout and locked in a ${streakText}.${stepsText}`)
       }
       setSessionComplete(true)
       setRunning(false)
@@ -459,7 +460,7 @@ export default function WorkoutTracker() {
           </motion.button>
           {allDone && !sessionComplete && (
             <div style={{ color:'#065f46', fontSize:13, fontWeight:500 }}>
-              All exercises are checked. Tap finish to save the workout and update your streak.
+              All exercises are checked. Tap finish to save the workout, estimate steps, and update your streak.
             </div>
           )}
           {saveError && (

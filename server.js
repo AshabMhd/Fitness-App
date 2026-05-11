@@ -12,14 +12,19 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3001
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*'
 
 // Database setup
-const dbPath = path.join(__dirname, 'fitness.db')
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'fitness.db')
 const db = new Database(dbPath)
 
 // Middleware
-app.use(cors())
+app.use(cors({ origin: CORS_ORIGIN }))
 app.use(express.json())
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true, service: 'fitpulse-api' })
+})
 
 
 // Initialize database tables
@@ -155,6 +160,30 @@ ensureColumn('users', 'streak', 'INTEGER DEFAULT 0')
 ensureColumn('users', 'last_workout_date', 'DATE')
 ensureColumn('workouts', 'user_id', 'INTEGER')
 
+const STEP_RATES_BY_CATEGORY = {
+  cardio: 115,
+  hiit: 90,
+  sports: 95,
+  strength: 45,
+  flexibility: 30,
+  yoga: 25,
+}
+
+const estimateSteps = ({ duration = 0, caloriesBurned = 0, category = '' }) => {
+  const minutes = Math.max(0, Number(duration) || 0)
+  if (minutes <= 0) return 0
+
+  const normalizedCategory = String(category || '').toLowerCase()
+  const categoryRate = STEP_RATES_BY_CATEGORY[normalizedCategory]
+  if (categoryRate) return Math.round(minutes * categoryRate)
+
+  const caloriesPerMinute = (Number(caloriesBurned) || 0) / minutes
+  if (caloriesPerMinute >= 9) return Math.round(minutes * 95)
+  if (caloriesPerMinute >= 6) return Math.round(minutes * 70)
+  if (caloriesPerMinute >= 4) return Math.round(minutes * 45)
+  return Math.round(minutes * 30)
+}
+
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
@@ -249,10 +278,14 @@ app.get('/api/user/profile', authenticateToken, (req, res) => {
   const workoutStats = db.prepare(
     'SELECT COUNT(*) AS completedWorkouts, IFNULL(SUM(calories_burned), 0) AS totalCalories, IFNULL(SUM(duration), 0) AS totalMinutes FROM workout_sessions WHERE user_id = ? AND completed = 1'
   ).get(req.user.id)
+  const stepStats = db.prepare(
+    'SELECT IFNULL(SUM(steps), 0) AS totalSteps FROM user_progress WHERE user_id = ?'
+  ).get(req.user.id)
 
   res.json({
     ...user,
     completed_workouts: workoutStats.completedWorkouts || 0,
+    total_steps: stepStats.totalSteps || 0,
     total_xp: workoutStats.completedWorkouts * 100 + workoutStats.totalCalories,
     hours_logged: Math.round((workoutStats.totalMinutes || 0) / 60),
   })
@@ -355,6 +388,12 @@ app.post('/api/sessions', authenticateToken, (req, res) => {
   console.log('Session creation called for user:', req.user.id)
   const { workoutId, startTime, endTime, duration = 0, caloriesBurned = 0, completed = false } = req.body
   console.log('Session data:', { workoutId, startTime, endTime, duration, caloriesBurned, completed })
+  const workout = workoutId
+    ? db.prepare('SELECT category FROM workouts WHERE id = ?').get(workoutId)
+    : null
+  const stepsAdded = completed
+    ? estimateSteps({ duration, caloriesBurned, category: workout?.category })
+    : 0
 
   const result = db.prepare(`
     INSERT INTO workout_sessions (user_id, workout_id, start_time, end_time, duration, calories_burned, completed)
@@ -386,12 +425,12 @@ app.post('/api/sessions', authenticateToken, (req, res) => {
   const progress = db.prepare('SELECT * FROM user_progress WHERE user_id = ? AND date = ?').get(req.user.id, today)
   console.log('Existing progress for today:', progress)
 
-  const updatedSteps = progress ? progress.steps : 0
+  const updatedSteps = (progress ? progress.steps : 0) + stepsAdded
   const updatedCalories = (progress ? progress.calories_burned : 0) + caloriesBurned
   const updatedActive = (progress ? progress.active_minutes : 0) + duration
   const updatedHeart = progress ? progress.heart_rate_avg : null
 
-  console.log('Updated progress values:', { updatedSteps, updatedCalories, updatedActive, updatedHeart })
+  console.log('Updated progress values:', { updatedSteps, stepsAdded, updatedCalories, updatedActive, updatedHeart })
 
   db.prepare(`
     INSERT OR REPLACE INTO user_progress (user_id, date, steps, calories_burned, active_minutes, heart_rate_avg)
@@ -411,7 +450,7 @@ app.post('/api/sessions', authenticateToken, (req, res) => {
   if (newStreak === 7) unlockAchievement('7-Day Streak')
   if (newStreak === 14) unlockAchievement('14-Day Streak')
 
-  res.json({ id: result.lastInsertRowid, streak: newStreak, caloriesBurned, duration })
+  res.json({ id: result.lastInsertRowid, streak: newStreak, caloriesBurned, duration, stepsAdded, totalSteps: updatedSteps })
 })
 
 app.get('/api/sessions', authenticateToken, (req, res) => {
@@ -430,13 +469,18 @@ app.get('/api/sessions', authenticateToken, (req, res) => {
 // Progress routes
 app.post('/api/progress', authenticateToken, (req, res) => {
   const { date, steps, caloriesBurned, activeMinutes, heartRateAvg } = req.body
+  const existing = db.prepare('SELECT * FROM user_progress WHERE user_id = ? AND date = ?').get(req.user.id, date)
+  const nextSteps = Number.isFinite(Number(steps)) ? Number(steps) : (existing?.steps || 0)
+  const nextCalories = Number.isFinite(Number(caloriesBurned)) ? Number(caloriesBurned) : (existing?.calories_burned || 0)
+  const nextActive = Number.isFinite(Number(activeMinutes)) ? Number(activeMinutes) : (existing?.active_minutes || 0)
+  const nextHeart = Number.isFinite(Number(heartRateAvg)) ? Number(heartRateAvg) : (existing?.heart_rate_avg || null)
 
   db.prepare(`
     INSERT OR REPLACE INTO user_progress (user_id, date, steps, calories_burned, active_minutes, heart_rate_avg)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(req.user.id, date, steps, caloriesBurned, activeMinutes, heartRateAvg)
+  `).run(req.user.id, date, nextSteps, nextCalories, nextActive, nextHeart)
 
-  res.json({ message: 'Progress updated' })
+  res.json({ message: 'Progress updated', steps: nextSteps })
 })
 
 app.get('/api/progress', authenticateToken, (req, res) => {

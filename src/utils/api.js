@@ -1,4 +1,20 @@
-const API_BASE = 'http://localhost:3001/api'
+import { Capacitor } from '@capacitor/core'
+
+function getApiBaseUrl() {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/$/, '')
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    return 'http://10.0.2.2:3001/api'
+  }
+
+  const { protocol, hostname } = window.location
+  return `${protocol}//${hostname}:3001/api`
+}
+
+const API_BASE = getApiBaseUrl()
 
 class ApiError extends Error {
   constructor(message, status) {

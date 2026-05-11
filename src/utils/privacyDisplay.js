@@ -42,5 +42,12 @@ export function anonymizeMuscleFreq(rows) {
 
 export function anonymizeHeatCells(rows) {
   if (!Array.isArray(rows)) return []
-  return rows.map((c) => ({ ...c, level: 0 }))
+  return rows.map((c) => ({
+    ...c,
+    steps: 0,
+    calories: 0,
+    active: 0,
+    score: 0,
+    level: 0,
+  }))
 }

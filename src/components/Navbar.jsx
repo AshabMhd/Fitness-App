@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LayoutDashboard, Dumbbell, TrendingUp, User, LogOut } from 'lucide-react'
+import { LayoutDashboard, Dumbbell, TrendingUp, User, Camera, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const navItems = [
   { to: '/',         icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/workouts', icon: Dumbbell,        label: 'Workouts'  },
+  { to: '/camera',   icon: Camera,          label: 'Live Trainer' },
   { to: '/progress', icon: TrendingUp,      label: 'Progress'  },
   { to: '/profile',  icon: User,            label: 'Profile'   },
 ]

@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import WorkoutTracker from './pages/WorkoutTracker'
 import Progress from './pages/Progress'
 import Profile from './pages/Profile'
+import CameraWorkout from './pages/CameraWorkout'
 import { useEffect } from "react";
 import { applyReminderSchedule } from "./utils/notifications";
 
@@ -46,6 +47,7 @@ function AppContent() {
         <Routes>
           <Route path="/"          element={<Dashboard />}     />
           <Route path="/workouts"  element={<WorkoutTracker />} />
+          <Route path="/camera"    element={<CameraWorkout />} />
           <Route path="/progress"  element={<Progress />}       />
           <Route path="/profile"   element={<Profile />}        />
         </Routes>

@@ -65,6 +65,12 @@ export default function WorkoutTracker() {
   const [saveError, setSaveError] = useState(null)
   const [planName, setPlanName] = useState('')
   const [planSaved, setPlanSaved] = useState('')
+  const [voiceSupported, setVoiceSupported] = useState(false)
+  const [listening, setListening] = useState(false)
+  const listeningRef = useRef(false)
+  const [voiceTranscript, setVoiceTranscript] = useState('')
+  const [voiceMessage, setVoiceMessage] = useState('')
+  const recognitionRef = useRef(null)
   const [savedPlans, setSavedPlans] = useState([])
   const [plansLoading, setPlansLoading] = useState(true)
   const [plansError, setPlansError] = useState(null)
@@ -89,6 +95,38 @@ export default function WorkoutTracker() {
   ])
 
   useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = true
+      recognition.interimResults = false
+      recognition.lang = 'en-US'
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim()
+        setVoiceTranscript(transcript)
+        addExerciseByVoice(transcript)
+        setVoiceMessage(`Added from voice command. Keep speaking to add more exercises, or tap stop.`)
+      }
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error)
+        setVoiceMessage('Could not hear you clearly. Try again or tap stop to restart.')
+        setListening(false)
+        listeningRef.current = false
+      }
+
+      recognition.onend = () => {
+        if (listeningRef.current) {
+          setVoiceMessage('Listening again... Say another exercise when ready.')
+          recognition.start()
+        }
+      }
+
+      recognitionRef.current = recognition
+      setVoiceSupported(true)
+    }
+
     const loadWorkouts = async () => {
       try {
         const [data, plans] = await Promise.all([workoutsApi.getAll(), workoutsApi.getPlans()])
@@ -119,6 +157,12 @@ export default function WorkoutTracker() {
     }
 
     loadWorkouts()
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort()
+      }
+    }
   }, [])
 
   const filtered = workouts.filter(w => cat === 'all' || w.category === cat)
@@ -174,6 +218,77 @@ export default function WorkoutTracker() {
     }
     setExercises(prev => [...prev, newExercise])
     setModal(null) // close the modal after adding
+  }
+
+  const parseVoiceExerciseName = (transcript) => {
+    if (!transcript) return ''
+    let name = transcript.trim()
+    name = name.replace(/^add (?:a |an |the )?/i, '')
+    name = name.replace(/(?: to my session| to the session| to session| to my workout| to workout| into workout| into session)$/i, '')
+    name = name.replace(/^please (?:add|insert) (?:a |an |the )?/i, '')
+    return name.trim()
+  }
+
+  const addExerciseByVoice = (transcript) => {
+    const exerciseName = parseVoiceExerciseName(transcript)
+    if (!exerciseName) {
+      setVoiceMessage('Could not recognize an exercise name. Try speaking clearly, e.g. "Add squats."')
+      return
+    }
+
+    const matchingWorkout = workouts.find(w => {
+      const lower = w.name.toLowerCase()
+      const phrase = exerciseName.toLowerCase()
+      return lower.includes(phrase) || phrase.includes(lower)
+    })
+
+    if (matchingWorkout) {
+      handleAddToSession(matchingWorkout)
+      setVoiceMessage(`Added "${matchingWorkout.name}" from voice command.`)
+      return
+    }
+
+    const alreadyAdded = exercises.some(e => e.name.toLowerCase() === exerciseName.toLowerCase())
+    if (alreadyAdded) {
+      setVoiceMessage(`"${exerciseName}" is already in your session.`)
+      return
+    }
+
+    setExercises(prev => [...prev, {
+      id: Date.now(),
+      name: exerciseName.charAt(0).toUpperCase() + exerciseName.slice(1),
+      sets: 3,
+      reps: '10',
+      done: false,
+      isNew: true,
+    }])
+    setVoiceMessage(`Added "${exerciseName}" as a custom exercise.`)
+  }
+
+  const stopVoiceRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort()
+    }
+    listeningRef.current = false
+    setListening(false)
+    setVoiceMessage('Voice recognition stopped.')
+  }
+
+  const handleStartVoice = () => {
+    if (!recognitionRef.current) {
+      setVoiceMessage('Voice recognition is not available in this browser.')
+      return
+    }
+    if (listening) {
+      stopVoiceRecognition()
+      return
+    }
+
+    setVoiceTranscript('')
+    setVoiceMessage('Listening... Speak the exercise name now.')
+    listeningRef.current = true
+    setListening(true)
+    recognitionRef.current.start()
   }
 
   const handleStartPause = () => {
@@ -420,11 +535,26 @@ export default function WorkoutTracker() {
             </motion.button>
             <motion.button
               whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }}
+              onClick={handleStartVoice}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 18px', borderRadius:9999, border:'1px solid rgba(59,130,246,0.18)', background: listening ? 'rgba(16,185,129,0.16)' : 'rgba(59,130,246,0.08)', color: listening ? '#047857' : '#2563eb', fontFamily:'Inter', fontSize:14, fontWeight:600, cursor:'pointer' }}
+            >
+              {listening ? 'Listening…' : 'Add by Voice'}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }}
               onClick={resetSession}
               style={{ width:38, height:38, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:12, background:'rgba(0,0,0,0.04)', border:'1px solid var(--border)', cursor:'pointer' }}
             >
               <RotateCcw size={15} color="var(--text-secondary)" />
             </motion.button>
+          </div>
+          <div style={{ minWidth:180, fontSize:12, color:'var(--text-muted)', lineHeight:1.4 }}>
+            {voiceSupported ? (
+              voiceMessage || 'Say: "Add squats" or "Add push ups" to add an exercise by voice.'
+            ) : (
+              'Voice commands are not supported in this browser.'
+            )}
+            {voiceTranscript && <div style={{ marginTop:6, fontWeight:600, color:'var(--text-primary)' }}>Heard: "{voiceTranscript}"</div>}
           </div>
 
           {/* Progress */}

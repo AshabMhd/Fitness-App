@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight, Play, Target, Zap, TrendingUp, Activity, ArrowRight } from 'lucide-react'
+import { ChevronRight, Play, Target, Zap, TrendingUp, Activity, ArrowRight, Camera } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { dashboard, workouts } from '../utils/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -205,6 +205,21 @@ export default function Dashboard() {
                   >
                     <Play size={16} fill="white" /> Start training
                     <ArrowRight size={16} />
+                  </motion.button>
+                </Link>
+                <Link to="/camera">
+                  <motion.button
+                    whileHover={{ scale:1.04 }}
+                    whileTap={{ scale:0.97 }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:8,
+                      padding:'14px 28px', borderRadius:9999,
+                      background:'rgba(59,130,246,0.1)', color:'#2563eb',
+                      fontFamily:'Inter', fontSize:16, fontWeight:500,
+                      border:'1px solid rgba(59,130,246,0.2)', cursor:'pointer',
+                    }}
+                  >
+                    <Camera size={16} /> Live trainer
                   </motion.button>
                 </Link>
               </div>
